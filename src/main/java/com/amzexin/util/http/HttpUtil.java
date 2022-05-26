@@ -40,7 +40,6 @@ import java.util.*;
 public final class HttpUtil {
 
     private static boolean openLogger = true;
-
     /**
      * logger
      */
@@ -69,6 +68,10 @@ public final class HttpUtil {
      * HttpClient
      */
     private static CloseableHttpClient httpClient;
+    /**
+     * cookie存储器
+     */
+    private static CookieStore cookieStore = new BasicCookieStore();
 
     static {
         // 初始化 HttpClient
@@ -78,38 +81,41 @@ public final class HttpUtil {
     // region 创建HttpClient
 
     private static CloseableHttpClient createHttpClient() {
+        HttpClientBuilder httpClientBuilder = HttpClients.custom();
+
+        // 配置连接池
         PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
         connectionManager.setMaxTotal(128);
         connectionManager.setDefaultMaxPerRoute(128);
-        return HttpClients.custom().setConnectionManager(connectionManager).build();
+        httpClientBuilder.setConnectionManager(connectionManager);
+
+        // 设置cookie
+        httpClientBuilder.setDefaultCookieStore(cookieStore);
+
+        // 设置https相关
+        SSLContext sslContext = SSLContexts.createSystemDefault();
+        SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+        httpClientBuilder.setSSLSocketFactory(sslConnectionSocketFactory);
+
+        return httpClientBuilder.build();
     }
 
     /**
      * 获取 HttpClient
-     * TODO 待优化成连接池
      *
      * @param url     url
      * @param cookies cookies
      * @return CloseableHttpClient
      */
     private static CloseableHttpClient getHttpClient(String url, List<BasicClientCookie> cookies) {
-        HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
         if (cookies != null && !cookies.isEmpty()) {
-            CookieStore cookieStore = new BasicCookieStore();
-            httpClientBuilder.setDefaultCookieStore(cookieStore);
             for (BasicClientCookie basicClientCookie : cookies) {
                 cookieStore.addCookie(basicClientCookie);
             }
         }
 
-        if (url.startsWith("https")) {
-            SSLContext sslContext = SSLContexts.createSystemDefault();
-            SSLConnectionSocketFactory sslConnectionSocketFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-            httpClientBuilder.setSSLSocketFactory(sslConnectionSocketFactory);
-        }
-
-        return httpClientBuilder.build();
+        return httpClient;
     }
 
     /**

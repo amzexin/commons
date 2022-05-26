@@ -1,10 +1,13 @@
 package com.amzexin.util.test.http;
 
-import com.amzexin.util.http.HttpParams;
-import com.amzexin.util.http.HttpResult;
 import com.amzexin.util.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.cookie.Cookie;
+import org.apache.http.cookie.CookieIdentityComparator;
+import org.apache.http.impl.cookie.BasicClientCookie;
 import org.junit.Test;
+
+import java.util.TreeSet;
 
 /**
  * Description: CommonTest
@@ -35,7 +38,22 @@ public class HttpUtilTest {
     @Test
     public void httpsTest() {
         String url = "https://www.baidu.com";
-        HttpResult<String> httpResult = HttpUtil.get(url);
+        HttpUtil.get(url);
+    }
 
+    @Test
+    public void cookieTest() {
+        BasicClientCookie basicCookieStore1 = new BasicClientCookie("name", "value");
+        basicCookieStore1.setDomain("amzexin.com");
+        basicCookieStore1.setPath("/");
+        BasicClientCookie basicCookieStore2 = new BasicClientCookie("name", "value");
+        basicCookieStore2.setDomain("amzexin.com");
+        basicCookieStore2.setPath("/x");
+        log.info("basicCookieStore1 == basicCookieStore2 {}", basicCookieStore1.equals(basicCookieStore2));
+
+        TreeSet<Cookie> cookieStores = new TreeSet<>(new CookieIdentityComparator());
+        cookieStores.add(basicCookieStore1);
+        cookieStores.add(basicCookieStore2);
+        log.info("cookieStores.size = {}", cookieStores.size());
     }
 }
