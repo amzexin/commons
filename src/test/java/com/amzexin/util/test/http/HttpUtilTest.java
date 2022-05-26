@@ -1,5 +1,8 @@
 package com.amzexin.util.test.http;
 
+import com.amzexin.util.http.HttpParams;
+import com.amzexin.util.http.HttpResult;
+import com.amzexin.util.http.HttpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
@@ -27,5 +30,12 @@ public class HttpUtilTest {
          *
          * 6. 释放连接。无论执行方法是否成功，都必须释放连接
          */
+    }
+
+    @Test
+    public void httpsTest() {
+        String url = "https://www.baidu.com";
+        HttpResult<String> httpResult = HttpUtil.get(url);
+
     }
 }

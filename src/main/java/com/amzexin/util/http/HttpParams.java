@@ -1,6 +1,8 @@
 package com.amzexin.util.http;
 
 import com.alibaba.fastjson.JSON;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
 import java.io.UnsupportedEncodingException;
@@ -8,8 +10,11 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+@Getter
+@NoArgsConstructor
 public class HttpParams {
 
     private static final String CHARACTER_SET = "UTF-8";
@@ -64,25 +69,9 @@ public class HttpParams {
      */
     private String charSet = CHARACTER_SET;
 
-
-    public HttpParams() {
-    }
-
-    public String getCharSet() {
-        return charSet;
-    }
-
-    public void setCharSet(String charSet) {
+    public HttpParams setCharSet(String charSet) {
         this.charSet = charSet;
-    }
-
-    /**
-     * 获取请求头
-     *
-     * @return Map
-     */
-    public Map<String, String> getHeaders() {
-        return headers;
+        return this;
     }
 
     /**
@@ -110,15 +99,6 @@ public class HttpParams {
     }
 
     /**
-     * 获取cookie列表
-     *
-     * @return List
-     */
-    public List<BasicClientCookie> getCookies() {
-        return cookies;
-    }
-
-    /**
      * 设置cookie
      *
      * @param name   name
@@ -142,42 +122,31 @@ public class HttpParams {
      */
     public HttpParams setCookie(String name, String cookie, String domain, String path, Integer version, Date date) {
         BasicClientCookie basicClientCookie = new BasicClientCookie(name, cookie);
-
-        if (domain == null || "".equals(domain)) {
-            basicClientCookie.setDomain(".");
-        } else {
-            basicClientCookie.setDomain(domain);
-        }
-
-        if (path == null || "".equals(path)) {
-            basicClientCookie.setPath("/");
-        } else {
-            basicClientCookie.setPath(path);
-        }
-
-        if (version == null) {
-            basicClientCookie.setVersion(1);
-        } else {
-            basicClientCookie.setVersion(version);
-        }
-        // 默认1天
-        if (date == null) {
-            long expireMS = System.currentTimeMillis() + 24 * 60 * 60 * 1000L;
-            basicClientCookie.setExpiryDate(new Date(expireMS));
-        } else {
-            basicClientCookie.setExpiryDate(date);
-        }
+        basicClientCookie.setDomain(domain);
+        basicClientCookie.setPath(path == null || "".equals(path) ? "/" : path);
+        basicClientCookie.setVersion(version == null ? 0 : version);
+        basicClientCookie.setExpiryDate(date == null ? new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(1)) : date);
         cookies.add(basicClientCookie);
         return this;
     }
 
     /**
-     * 获取表单
+     * 填充cookie的domain（cookie必须设置domain才会生效）
      *
-     * @return Map
+     * @param url
      */
-    public Map<String, String> getForms() {
-        return forms;
+    public void fillCookieDomain(String url) {
+        if (cookies.isEmpty()) {
+            return;
+        }
+
+        String domain = url.split("/")[2];
+        for (BasicClientCookie cookie : cookies) {
+            String cookieDomain = cookie.getDomain();
+            if (cookieDomain == null || "".equals(cookieDomain)) {
+                cookie.setDomain(domain);
+            }
+        }
     }
 
     /**
@@ -205,25 +174,6 @@ public class HttpParams {
     }
 
     /**
-     * 获取url拼接参数
-     *
-     * @return Map
-     */
-    public Map<String, String> getParams() {
-        return params;
-    }
-
-    /**
-     * 获取从连接池获取连接超时时间, 单位:毫秒
-     *
-     * @return Integer
-     */
-    public Integer getConnectionRequestTimeout() {
-        return connectionRequestTimeout;
-    }
-
-
-    /**
      * 设置从连接池获取连接超时时间, 单位:毫秒
      *
      * @param connectionRequestTimeout connectionRequestTimeout
@@ -235,15 +185,6 @@ public class HttpParams {
     }
 
     /**
-     * 获取连接建立超时时间, 单位:毫秒
-     *
-     * @return Integer
-     */
-    public Integer getConnectionTimeout() {
-        return connectionTimeout;
-    }
-
-    /**
      * 设置连接建立超时时间, 单位:毫秒
      *
      * @param connectionTimeout connectionTimeout
@@ -252,15 +193,6 @@ public class HttpParams {
     public HttpParams setConnectionTimeout(Integer connectionTimeout) {
         this.connectionTimeout = connectionTimeout;
         return this;
-    }
-
-    /**
-     * 获取客户端socket请求超时时间, 单位:毫秒
-     *
-     * @return Integer
-     */
-    public Integer getSocketTimeout() {
-        return socketTimeout;
     }
 
     /**
@@ -299,16 +231,13 @@ public class HttpParams {
      * @return HttpParams
      */
     public HttpParams setFormByMap(Map<String, String> map) {
-        forms.putAll(map);
+        this.forms.putAll(map);
         return this;
     }
 
-    public Integer getRetryCount() {
-        return retryCount;
-    }
-
-    public void setRetryCount(Integer retryCount) {
+    public HttpParams setRetryCount(Integer retryCount) {
         this.retryCount = retryCount;
+        return this;
     }
 
     /**
@@ -334,15 +263,6 @@ public class HttpParams {
         }
 
         return this;
-    }
-
-    /**
-     * 获取 body
-     *
-     * @return String
-     */
-    public String getBody() {
-        return body;
     }
 
     /**

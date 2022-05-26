@@ -11,4 +11,6 @@ public class HttpConstants {
      */
     public static final String HTTP_HEADER_TRACE_ID = "app_trace_id";
 
+    private HttpConstants() {
+    }
 }

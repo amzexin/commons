@@ -114,7 +114,8 @@ public class KafkaTopicMessageCountStatistics {
         String urlFormat = "%s/topic/mock/list/ajax?page=1&offset=10";
         String url = String.format(urlFormat, kafkaEagleDomain);
         HttpParams httpParams = new HttpParams();
-        httpParams.setHeader("Cookie", cookie);
+        String[] cookieArr = cookie.split("=");
+        httpParams.setCookie(cookieArr[0], cookieArr[1]);
 
         HttpResult<String> httpResult = HttpUtil.get(url, httpParams);
         if (!httpResult.successful()) {
@@ -142,7 +143,8 @@ public class KafkaTopicMessageCountStatistics {
         String urlFormat = "%s/topic/list/filter/select/ajax?stime=%s&etime=%s&topics=%s";
         String url = String.format(urlFormat, kafkaEagleDomain, stime, etime, topic);
         HttpParams httpParams = new HttpParams();
-        httpParams.setHeader("Cookie", cookie);
+        String[] cookieArr = cookie.split("=");
+        httpParams.setCookie(cookieArr[0], cookieArr[1]);
 
         HttpResult<String> httpResult = HttpUtil.get(url, httpParams);
         if (!httpResult.successful()) {
@@ -245,7 +247,13 @@ public class KafkaTopicMessageCountStatistics {
     }
 
     @Test
-    public void test20220524_2105() throws IOException {
+    public void topicsTest() {
+        List<String> topicList = topics();
+        log.info("topicList = {}", topicList);
+    }
+
+    @Test
+    public void dataExportTest() throws IOException {
         List<MessageCount> allMessageCount = Collections.singletonList(new MessageCount("test", "2022-05-24", "10000"));
         dataExport(allMessageCount, new FileOutputStream("logs/kafka消息量统计.xlsx"));
     }

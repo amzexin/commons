@@ -95,7 +95,6 @@ public final class HttpUtil {
     private static CloseableHttpClient getHttpClient(String url, List<BasicClientCookie> cookies) {
         HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
-        // TODO cookie不生效，待解决；参考博客：https://blog.csdn.net/zhongzh86/article/details/84070561
         if (cookies != null && !cookies.isEmpty()) {
             CookieStore cookieStore = new BasicCookieStore();
             httpClientBuilder.setDefaultCookieStore(cookieStore);
@@ -341,6 +340,7 @@ public final class HttpUtil {
 
     //region HTTP 请求
     private static HttpResult<String> http(HttpMethod httpMethod, String url, HttpParams httpParams) {
+        httpParams.fillCookieDomain(url);
         HttpResult<String> result = null;
 
         Map<String, String> headers = httpParams.getHeaders();
@@ -386,17 +386,19 @@ public final class HttpUtil {
 
 
         for (int i = 1; i <= retryCount; i++) {
-            if (HttpMethod.GET.equals(httpMethod)) {
-                result = httpGet(url, charSet, headers, cookies, paramMap, requestConfig, i);
-            } else if (HttpMethod.POST.equals(httpMethod)) {
-                result = httpPost(url, charSet, headers, cookies, formMap, body, requestConfig, i);
-            } else if (HttpMethod.PUT.equals(httpMethod)) {
-                result = httpPut(url, charSet, headers, cookies, body, requestConfig, i);
-            } else if (HttpMethod.DELETE.equals(httpMethod)) {
-                result = httpDelete(url, charSet, headers, cookies, paramMap, requestConfig, i);
-            } else {
-                printErrorLogger("http method not support now {}", httpMethod);
-                throw new RuntimeException("http method not support now:" + httpMethod);
+            switch (httpMethod) {
+                case GET:
+                    result = httpGet(url, charSet, headers, cookies, paramMap, requestConfig, i);
+                    break;
+                case POST:
+                    result = httpPost(url, charSet, headers, cookies, formMap, body, requestConfig, i);
+                    break;
+                case PUT:
+                    result = httpPut(url, charSet, headers, cookies, body, requestConfig, i);
+                    break;
+                case DELETE:
+                    result = httpDelete(url, charSet, headers, cookies, paramMap, requestConfig, i);
+                    break;
             }
 
             if (success(result.getCode())) {

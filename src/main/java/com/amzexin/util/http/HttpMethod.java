@@ -1,5 +1,11 @@
 package com.amzexin.util.http;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+
+@Getter
+@AllArgsConstructor
 public enum HttpMethod {
     /**
      * GET
@@ -23,15 +29,8 @@ public enum HttpMethod {
      */
     private String value;
 
-    HttpMethod(String value) {
-        this.value = value;
-    }
-
     public boolean equals(HttpMethod httpMethod) {
         return this == httpMethod;
     }
 
-    public String getValue() {
-        return value;
-    }
 }
