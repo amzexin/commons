@@ -11,7 +11,7 @@ public class HttpResult<T> {
 
     private Integer code = 500;
 
-    private String message = "server exception";
+    private String message = "server error";
 
     private T data;
 

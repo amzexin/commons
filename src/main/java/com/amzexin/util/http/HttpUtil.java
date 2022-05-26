@@ -36,6 +36,7 @@ import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public final class HttpUtil {
 
@@ -84,7 +85,7 @@ public final class HttpUtil {
         HttpClientBuilder httpClientBuilder = HttpClients.custom();
 
         // 配置连接池
-        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager();
+        PoolingHttpClientConnectionManager connectionManager = new PoolingHttpClientConnectionManager(60, TimeUnit.SECONDS);
         connectionManager.setMaxTotal(128);
         connectionManager.setDefaultMaxPerRoute(128);
         httpClientBuilder.setConnectionManager(connectionManager);
@@ -463,7 +464,7 @@ public final class HttpUtil {
 
         HttpResult<String> result = response(httpClient, httpget, charset);
 
-        printInfoLogger("==>> CONNECT {} times, method:{}, url:{}, headers:{}, formMap:{}, result:{}",
+        printInfoLogger("{}th request, {} {}, headers: {}, formMap: {}, result: {}",
                 times, HttpMethod.GET, url, headers, paramMap, result);
 
         return result;
@@ -511,7 +512,7 @@ public final class HttpUtil {
         CloseableHttpClient httpClient = getHttpClient(url, cookies);
         HttpResult<String> result = response(httpClient, httpPost, charset);
 
-        printInfoLogger("==>> CONNECT {} times, method:{}, url:{}, headers:{}, formMap:{}, body:{}, result:{}",
+        printInfoLogger("{}th request, {} {}, headers: {}, formMap: {}, body: {}, result: {}",
                 times, HttpMethod.POST, url, headers, formMap, body, result);
 
         return result;
@@ -544,7 +545,7 @@ public final class HttpUtil {
         CloseableHttpClient httpClient = getHttpClient(url, cookies);
         HttpResult<String> result = response(httpClient, httpPut, charset);
 
-        printInfoLogger("==>> CONNECT {} times, method:{}, url:{}, headers:{}, body:{}, result:{}",
+        printInfoLogger("{}th request, {} {}, headers: {}, body: {}, result: {}",
                 times, HttpMethod.PUT, url, headers, body, result);
 
 
@@ -579,7 +580,7 @@ public final class HttpUtil {
 
         HttpResult<String> result = response(httpClient, httpDelete, charset);
 
-        printInfoLogger("==>> CONNECT {} times, method:{}, url:{}, headers:{}, paramMap:{}, result:{}",
+        printInfoLogger("{}th request, {} {}, headers: {}, paramMap: {}, result: {}",
                 times, HttpMethod.DELETE, realUrl, headers, paramMap, result);
 
         return result;

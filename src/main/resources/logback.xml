@@ -57,7 +57,7 @@
     </appender>
 
     <!--配置根节点的logger 关联到三个 日志输出，  所以得打印日志 都会上浮到根节点  -->
-    <root level="info">
+    <root level="debug">
         <appender-ref ref="errorAppender"/>
         <appender-ref ref="fileAppender"/>
         <appender-ref ref="consoleAppender"/>

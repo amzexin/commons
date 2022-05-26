@@ -37,7 +37,7 @@ public class HttpUtilTest {
 
     @Test
     public void httpsTest() {
-        String url = "https://www.baidu.com";
+        String url = "https://navigation-oregon.loomo.com/ping";
         HttpUtil.get(url);
     }
 
