@@ -1,4 +1,4 @@
-package com.amzexin.util.trace;
+package com.amzexin.util.common;
 
 import org.slf4j.MDC;
 
