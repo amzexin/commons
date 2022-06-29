@@ -21,7 +21,7 @@ public class ObjectTest {
 
     @Test
     public void mainTest() throws IOException {
-
+        // synchronized会锁住对象，object.wait会释放该对象的锁
         waitThread();
         waitThread();
         SleepUtil.sleep(1000);
@@ -66,7 +66,7 @@ public class ObjectTest {
             public void run() {
                 synchronized (lock) {
                     log.info("进入synchronized");
-                    SleepUtil.sleep(2000);
+                    // SleepUtil.sleep(2000);
                     try {
                         lock.wait();
                     } catch (InterruptedException e) {
