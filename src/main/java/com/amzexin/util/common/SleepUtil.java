@@ -13,7 +13,9 @@ public class SleepUtil {
 
     public static void sleep(long millis) {
         try {
+            log.info("sleep {}ms start...", millis);
             Thread.sleep(millis);
+            log.info("sleep {}ms end...", millis);
         } catch (InterruptedException e) {
             log.error(e.getMessage(), e);
         }
