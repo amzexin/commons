@@ -14,7 +14,7 @@ import java.net.SocketTimeoutException;
  * @date 2022-06-29 15:43
  */
 @Slf4j
-public class ExceptionTest {
+public class MqttExceptionTest {
 
     @Test
     public void run() {
