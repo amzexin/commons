@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
     <!-- 动态日志级别 -->
-    <jmxConfigurator/>
+<!--    <jmxConfigurator/>-->
     <property name="logPath" value="logs"/>
 
     <!--输出到控制台-->
@@ -57,7 +57,7 @@
     </appender>
 
     <!--配置根节点的logger 关联到三个 日志输出，  所以得打印日志 都会上浮到根节点  -->
-    <root level="debug">
+    <root level="info">
         <appender-ref ref="errorAppender"/>
         <appender-ref ref="fileAppender"/>
         <appender-ref ref="consoleAppender"/>
