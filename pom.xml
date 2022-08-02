@@ -12,7 +12,7 @@
     <description>commons</description>
 
     <modules>
-        <module>commons-util</module>
+        <module>commons-lang</module>
         <module>commons-test</module>
         <module>commons-http</module>
     </modules>
