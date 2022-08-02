@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.unittest.script;
+package io.github.amzexin.commons.test.all.script;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -254,7 +254,7 @@ public class KafkaTopicMessageCountStatistics {
 
     @Test
     public void dataExportTest() throws IOException {
-        List<MessageCount> allMessageCount = Collections.singletonList(new MessageCount("io/github/amzexin/commons/unittest", "2022-05-24", "10000"));
+        List<MessageCount> allMessageCount = Collections.singletonList(new MessageCount("io/github/amzexin/commons/test/all", "2022-05-24", "10000"));
         dataExport(allMessageCount, new FileOutputStream("logs/kafka消息量统计.xlsx"));
     }
 

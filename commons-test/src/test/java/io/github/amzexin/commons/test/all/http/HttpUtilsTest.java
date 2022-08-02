@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.unittest.http;
+package io.github.amzexin.commons.test.all.http;
 
 import io.github.amzexin.commons.http.HttpUtils;
 import lombok.extern.slf4j.Slf4j;
