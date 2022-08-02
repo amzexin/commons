@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.util;
+package io.github.amzexin.commons.lang;
 
 import org.slf4j.MDC;
 
