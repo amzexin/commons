@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.unittest.other;
+package io.github.amzexin.commons.test.all.other;
 
 import io.github.amzexin.commons.util.SleepUtils;
 import io.github.amzexin.commons.util.TraceIdUtils;
