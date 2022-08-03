@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Description: GracefulShutdownTest
+ * <a href="https://www.cnblogs.com/nuccch/p/10903162.html">如何优雅地停止Java进程 </a>
  *
  * @author Lizexin
  * @date 2022-08-03 11:00
