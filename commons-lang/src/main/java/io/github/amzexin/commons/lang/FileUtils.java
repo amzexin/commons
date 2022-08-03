@@ -1,6 +1,7 @@
 package io.github.amzexin.commons.lang;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
@@ -11,8 +12,9 @@ import java.net.URL;
  * @author Lizexin
  * @date 2022-07-15 15:29
  */
-@Slf4j
 public class FileUtils {
+
+    private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
 
     /**
      * 获取文件流（支持相对路径和绝对路径）

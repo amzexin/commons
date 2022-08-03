@@ -1,11 +1,5 @@
 package io.github.amzexin.commons.http;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-
-
-@Getter
-@AllArgsConstructor
 public enum HttpMethod {
     /**
      * GET
@@ -33,4 +27,11 @@ public enum HttpMethod {
         return this == httpMethod;
     }
 
+    public String getValue() {
+        return value;
+    }
+
+    HttpMethod(String value) {
+        this.value = value;
+    }
 }

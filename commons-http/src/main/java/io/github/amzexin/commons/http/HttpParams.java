@@ -1,8 +1,6 @@
 package io.github.amzexin.commons.http;
 
 import com.alibaba.fastjson.JSON;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
 import java.io.UnsupportedEncodingException;
@@ -13,8 +11,6 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@Getter
-@NoArgsConstructor
 public class HttpParams {
 
     private static final String CHARACTER_SET = "UTF-8";
@@ -355,4 +351,44 @@ public class HttpParams {
         }
     }
     //endregion
+
+    public Map<String, String> getHeaders() {
+        return headers;
+    }
+
+    public List<BasicClientCookie> getCookies() {
+        return cookies;
+    }
+
+    public Map<String, String> getForms() {
+        return forms;
+    }
+
+    public Map<String, String> getParams() {
+        return params;
+    }
+
+    public String getBody() {
+        return body;
+    }
+
+    public Integer getConnectionRequestTimeout() {
+        return connectionRequestTimeout;
+    }
+
+    public Integer getConnectionTimeout() {
+        return connectionTimeout;
+    }
+
+    public Integer getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    public Integer getRetryCount() {
+        return retryCount;
+    }
+
+    public String getCharSet() {
+        return charSet;
+    }
 }

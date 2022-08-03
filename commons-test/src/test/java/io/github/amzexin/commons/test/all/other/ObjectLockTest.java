@@ -1,7 +1,7 @@
 package io.github.amzexin.commons.test.all.other;
 
-import io.github.amzexin.commons.util.SleepUtils;
-import io.github.amzexin.commons.util.TraceIdUtils;
+import io.github.amzexin.commons.lang.SleepUtils;
+import io.github.amzexin.commons.logback.TraceIdUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 
