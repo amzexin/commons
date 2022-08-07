@@ -8,7 +8,6 @@ import java.util.UUID;
  * Description: TraceIdUtils
  *
  * @author Lizexin
- * @date 2021-05-19 19:16
  */
 public class TraceIdUtils {
 

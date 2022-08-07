@@ -10,18 +10,17 @@ import java.net.URL;
  * Description: FileUtils
  *
  * @author Lizexin
- * @date 2022-07-15 15:29
  */
 public class FileUtils {
 
     private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
 
     /**
-     * 获取文件流（支持相对路径和绝对路径）
+     * 获取文件流
      *
-     * @param filePath
-     * @return
-     * @throws FileNotFoundException
+     * @param filePath 文件路径（相对路径和绝对路径）
+     * @return InputStream
+     * @throws FileNotFoundException 文件不存在
      */
     public static InputStream getInputStream(String filePath) throws FileNotFoundException {
         URL fileUrl = FileUtils.class.getClassLoader().getResource(filePath);
@@ -39,11 +38,11 @@ public class FileUtils {
     }
 
     /**
-     * 获取文件内容（支持相对路径和绝对路径）
+     * 获取文件内容
      *
-     * @param filePath
-     * @return
-     * @throws IOException
+     * @param filePath 文件路径（相对路径和绝对路径）
+     * @return 文件内容
+     * @throws IOException 内容读取出现异常
      */
     public static String getFileContent(String filePath) throws IOException {
         InputStream inputStream = getInputStream(filePath);

@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
@@ -18,11 +19,12 @@ import java.lang.reflect.InvocationTargetException;
 public class PropertyDescriptorTest {
 
     @Test
-    public void run() throws IntrospectionException, InvocationTargetException, IllegalAccessException {
+    public void run() throws IntrospectionException, InvocationTargetException, IllegalAccessException, IOException {
         Object obj = new HttpResult();
         PropertyDescriptor propertyDescriptor = new PropertyDescriptor("code", obj.getClass());
         Object propertyValue = propertyDescriptor.getReadMethod().invoke(obj);
         System.out.println(propertyValue);
+        System.in.read();
     }
 
 }
