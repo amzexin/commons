@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.lang;
+package io.github.amzexin.commons.util.io;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

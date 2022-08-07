@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.amzexin</groupId>
-    <artifactId>commons-lang</artifactId>
+    <artifactId>commons-util</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>

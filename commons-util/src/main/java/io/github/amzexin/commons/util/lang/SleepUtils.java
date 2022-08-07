@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.lang;
+package io.github.amzexin.commons.util.lang;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class SleepUtils {
 
-    private static final Logger log = LoggerFactory.getLogger(FileUtils.class);
+    private static final Logger log = LoggerFactory.getLogger(SleepUtils.class);
 
     private static final AtomicBoolean printLog = new AtomicBoolean(false);
 
