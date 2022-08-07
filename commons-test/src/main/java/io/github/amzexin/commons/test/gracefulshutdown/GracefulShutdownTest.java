@@ -1,6 +1,6 @@
 package io.github.amzexin.commons.test.gracefulshutdown;
 
-import io.github.amzexin.commons.lang.SleepUtils;
+import io.github.amzexin.commons.util.lang.SleepUtils;
 import io.github.amzexin.commons.logback.TraceIdUtils;
 import lombok.extern.slf4j.Slf4j;
 import sun.misc.Signal;

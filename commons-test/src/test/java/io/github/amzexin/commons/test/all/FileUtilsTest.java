@@ -1,6 +1,6 @@
 package io.github.amzexin.commons.test.all;
 
-import io.github.amzexin.commons.lang.FileUtils;
+import io.github.amzexin.commons.util.io.FileUtils;
 import org.junit.Test;
 
 import java.io.IOException;
