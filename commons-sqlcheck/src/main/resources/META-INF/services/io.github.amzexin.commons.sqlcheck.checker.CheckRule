@@ -1,0 +1,5 @@
+io.github.amzexin.commons.sqlcheck.statement.create.table.TableCommentCheckRule
+io.github.amzexin.commons.sqlcheck.statement.create.table.TableEngineCheckRule
+io.github.amzexin.commons.sqlcheck.statement.create.table.PrimaryKeyCheckRule
+io.github.amzexin.commons.sqlcheck.statement.create.table.ColumnCommentCheckRule
+io.github.amzexin.commons.sqlcheck.statement.create.table.ColumnDefaultValueCheckRule
