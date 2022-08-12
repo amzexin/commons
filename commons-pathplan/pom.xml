@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.amzexin</groupId>
-    <artifactId>commons-graph</artifactId>
+    <artifactId>commons-pathplan</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
