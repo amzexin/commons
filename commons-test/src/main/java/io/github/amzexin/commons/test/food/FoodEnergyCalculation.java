@@ -16,7 +16,7 @@ import java.io.InputStreamReader;
 public class FoodEnergyCalculation {
 
     private static String loadFile() throws IOException {
-        InputStream is = FileUtils.getInputStream("commons-test/src/main/java/io/github/amzexin/commons/test/food/FoodEnergyCalculationTextTemplate");
+        InputStream is = FileUtils.getInputStream("commons-test/src/main/java/io/github/amzexin/commons/test/food/FoodEnergyCalculationTextTemplate.txt");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(is));
 
