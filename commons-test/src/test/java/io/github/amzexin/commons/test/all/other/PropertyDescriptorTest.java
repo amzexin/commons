@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all;
+package io.github.amzexin.commons.test.all.other;
 
 import io.github.amzexin.commons.http.HttpResult;
 import lombok.extern.slf4j.Slf4j;

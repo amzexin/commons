@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all;
+package io.github.amzexin.commons.test.all.util;
 
 import io.github.amzexin.commons.util.io.FileUtils;
 import org.junit.Test;
