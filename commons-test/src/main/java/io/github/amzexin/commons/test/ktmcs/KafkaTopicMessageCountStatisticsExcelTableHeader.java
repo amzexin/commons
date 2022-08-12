@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.excel;
+package io.github.amzexin.commons.test.ktmcs;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class ExcelTableHeader {
+public class KafkaTopicMessageCountStatisticsExcelTableHeader {
     /**
      * 该头部标题所在列，从0开始
      */

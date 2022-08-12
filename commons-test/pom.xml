@@ -19,7 +19,7 @@
         <dependency>
             <groupId>io.github.amzexin</groupId>
             <artifactId>commons-util</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
         </dependency>
         <dependency>
             <groupId>io.github.amzexin</groupId>
@@ -29,7 +29,7 @@
         <dependency>
             <groupId>io.github.amzexin</groupId>
             <artifactId>commons-logback</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
@@ -70,6 +70,20 @@
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
+        </dependency>
+
+        <!--ntp对时-->
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.8.0</version>
+        </dependency>
+
+        <!--JMS-->
+        <dependency>
+            <groupId>org.apache.geronimo.specs</groupId>
+            <artifactId>geronimo-jms_1.1_spec</artifactId>
+            <version>1.1.1</version>
         </dependency>
 
     </dependencies>
