@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.ktmcs;
+package io.github.amzexin.commons.test.all.other.ktmcs;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
