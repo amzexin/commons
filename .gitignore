@@ -11,6 +11,7 @@ gen
 # Compiled class file
 *.class
 /**/target/
+**/MANIFEST.MF
 
 # Log file
 *.log
