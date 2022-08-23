@@ -1,6 +1,7 @@
 jar_name="xxx.jar"
 deploy_path="/root/runspace/xxx"
 filePath="${deploy_path}/${jar_name}"
+java_opts=" "
 # jar包在本地的位置
 localFilePath="/xxx/xxx.jar"
 
@@ -73,7 +74,7 @@ Start() {
         echo 'App already start!'
     else
         echo 'Starting jar'
-        nohup java -jar ${filePath} --server.port=8888 --spring.profiles.active=dev2 >/dev/null 2>&1 &
+        nohup java ${java_opts} -jar ${filePath} -Dfile.encoding=utf-8 --server.port=8888 --spring.profiles.active=dev2 >/dev/null 2>&1 &
         reTryCount=10
         for ((i = 0; i < reTryCount; ++i)); do
             sleep 1
