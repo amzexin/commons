@@ -89,7 +89,7 @@
     </dependencies>
 
     <build>
-        <finalName>commons-test.jar</finalName>
+        <finalName>commons-test</finalName><!--指定打包之后jar的名字-->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -102,21 +102,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
-                <configuration>
-                    <attach>true</attach>
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.4</version>
                 <configuration>
@@ -128,13 +113,14 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
+                    <encoding>UTF-8</encoding><!-- 打包编码 -->
                 </configuration>
                 <executions>
-                    <execution>
+                    <execution><!-- 配置执行器 -->
                         <id>make-assembly</id>
-                        <phase>package</phase>
+                        <phase>package</phase><!-- 绑定到package生命周期阶段上 -->
                         <goals>
-                            <goal>single</goal>
+                            <goal>single</goal><!-- 只运行一次 -->
                         </goals>
                     </execution>
                 </executions>
