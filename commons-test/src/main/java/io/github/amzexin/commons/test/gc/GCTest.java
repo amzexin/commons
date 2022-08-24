@@ -19,6 +19,7 @@ public class GCTest {
         byte[][] bytes = new byte[2][];
         int index = 0;
         int gcCount = 0;
+        int maxGcCount = 1;
         while (true) {
             try {
                 if (index == bytes.length - 1) {
@@ -29,10 +30,10 @@ public class GCTest {
                 bytes[index++] = new byte[MB];
                 Thread.sleep(500);
             } catch (OutOfMemoryError e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
                 gcCount++;
-                if (gcCount > 5) {
-                    log.info("gc count > 5, clear memory");
+                if (gcCount > maxGcCount) {
+                    log.info("gc count > {}, clear memory", maxGcCount);
                     bytes = new byte[2][];
                     index = 0;
                     gcCount = 0;
