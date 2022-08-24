@@ -1,5 +1,7 @@
 package io.github.amzexin.commons.test.gc;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Arrays;
 
 /**
@@ -8,6 +10,7 @@ import java.util.Arrays;
  * @author Lizexin
  * @date 2022-08-22 14:42
  */
+@Slf4j
 public class GCTest {
 
     private final static int MB = 1024 * 1024;
@@ -19,24 +22,24 @@ public class GCTest {
         while (true) {
             try {
                 if (index == bytes.length - 1) {
-                    System.out.println(String.format("copy bytes(%sMB)", index));
+                    log.info("copy bytes({}MB)", index);
                     bytes = Arrays.copyOf(bytes, bytes.length * 2);
                 }
-                System.out.println(String.format("%sMB", index));
+                log.info("{}MB", index);
                 bytes[index++] = new byte[MB];
                 Thread.sleep(500);
             } catch (OutOfMemoryError e) {
                 e.printStackTrace();
                 gcCount++;
                 if (gcCount > 5) {
-                    System.out.println("gc count > 5, clear memory");
+                    log.info("gc count > 5, clear memory");
                     bytes = new byte[2][];
                     index = 0;
                     gcCount = 0;
                 }
                 System.gc();
             } catch (Throwable e) {
-                e.printStackTrace();
+                log.error(e.getMessage(), e);
             }
         }
     }
