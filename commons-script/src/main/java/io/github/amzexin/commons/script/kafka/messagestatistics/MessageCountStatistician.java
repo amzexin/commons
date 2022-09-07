@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all.other.ktmcs;
+package io.github.amzexin.commons.script.kafka.messagestatistics;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
@@ -12,9 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.xssf.usermodel.*;
-import org.junit.Test;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -31,7 +29,7 @@ import java.util.function.Consumer;
  * @date 2022-05-24 15:47
  */
 @Slf4j
-public class KafkaTopicMessageCountStatisticsScript {
+public class MessageCountStatistician {
 
     /**
      * kafkaEagle域名
@@ -53,8 +51,8 @@ public class KafkaTopicMessageCountStatisticsScript {
      */
     private static String cookie = "xxx";
 
-    private static List<KafkaTopicMessageCountStatisticsExcelTableHeader> excelTableHeaders = new ArrayList<>(Arrays.asList(
-            new KafkaTopicMessageCountStatisticsExcelTableHeader(0, "topic", 52 * 256,
+    private static List<MessageCountStatisticsExcelTableHeader> excelTableHeaders = new ArrayList<>(Arrays.asList(
+            new MessageCountStatisticsExcelTableHeader(0, "topic", 52 * 256,
                     obj -> {
                         MessageCount messageCount = (MessageCount) obj;
                         return messageCount.getTopic();
@@ -70,7 +68,7 @@ public class KafkaTopicMessageCountStatisticsScript {
                         return cellStyle;
                     }
             ),
-            new KafkaTopicMessageCountStatisticsExcelTableHeader(1, "日期", 12 * 256,
+            new MessageCountStatisticsExcelTableHeader(1, "日期", 12 * 256,
                     obj -> {
                         MessageCount messageCount = (MessageCount) obj;
                         return messageCount.getX();
@@ -86,7 +84,7 @@ public class KafkaTopicMessageCountStatisticsScript {
                         return cellStyle;
                     }
             ),
-            new KafkaTopicMessageCountStatisticsExcelTableHeader(2, "消息量", 12 * 256,
+            new MessageCountStatisticsExcelTableHeader(2, "消息量", 12 * 256,
                     obj -> {
                         MessageCount messageCount = (MessageCount) obj;
                         return messageCount.y;
@@ -109,7 +107,7 @@ public class KafkaTopicMessageCountStatisticsScript {
      *
      * @return
      */
-    private List<String> topics() {
+    public List<String> topics() {
         String urlFormat = "%s/topic/mock/list/ajax?page=1&offset=10";
         String url = String.format(urlFormat, kafkaEagleDomain);
         HttpParams httpParams = new HttpParams();
@@ -138,7 +136,7 @@ public class KafkaTopicMessageCountStatisticsScript {
      * @param topic
      * @return
      */
-    private List<MessageCount> messageCounts(String topic) {
+    public List<MessageCount> messageCounts(String topic) {
         String urlFormat = "%s/topic/list/filter/select/ajax?stime=%s&etime=%s&topics=%s";
         String url = String.format(urlFormat, kafkaEagleDomain, stime, etime, topic);
         HttpParams httpParams = new HttpParams();
@@ -179,7 +177,7 @@ public class KafkaTopicMessageCountStatisticsScript {
      * @param outputStream
      * @throws IOException
      */
-    private void dataExport(List<MessageCount> messageCounts, OutputStream outputStream) throws IOException {
+    public void dataExport(List<MessageCount> messageCounts, OutputStream outputStream) throws IOException {
         // 1. 创建工作簿
         XSSFWorkbook workbook = new XSSFWorkbook();
 
@@ -190,7 +188,7 @@ public class KafkaTopicMessageCountStatisticsScript {
         XSSFRow headerRow = sheet.createRow(0);
 
         for (int i = 0; i < excelTableHeaders.size(); i++) {
-            KafkaTopicMessageCountStatisticsExcelTableHeader excelTableHeader = excelTableHeaders.get(i);
+            MessageCountStatisticsExcelTableHeader excelTableHeader = excelTableHeaders.get(i);
             // 3.1 设置每列宽度
             sheet.setColumnWidth(i, excelTableHeader.getColumnWidth());
 
@@ -214,7 +212,7 @@ public class KafkaTopicMessageCountStatisticsScript {
                 XSSFCell cell = dataRow.createCell(j);
 
                 // 4.3 填充具体的数据
-                KafkaTopicMessageCountStatisticsExcelTableHeader excelTableHeader = excelTableHeaders.get(j);
+                MessageCountStatisticsExcelTableHeader excelTableHeader = excelTableHeaders.get(j);
                 cell.setCellValue(excelTableHeader.getDataExtractor().run(messageCount));
                 cell.setCellStyle(excelTableHeader.getDataStyleCreator().run(workbook));
             }
@@ -228,33 +226,6 @@ public class KafkaTopicMessageCountStatisticsScript {
         // 释放资源
         outputStream.close();
         workbook.close();
-    }
-
-    @Test
-    public void mainTest() throws IOException {
-        // 获取所有Topic
-        List<String> topicList = topics();
-
-        // 获取所有topic的消息量
-        List<MessageCount> allMessageCount = new ArrayList<>();
-        for (String topic : topicList) {
-            allMessageCount.addAll(messageCounts(topic));
-        }
-
-        // 导出
-        dataExport(allMessageCount, new FileOutputStream("logs/kafka消息量统计.xlsx"));
-    }
-
-    @Test
-    public void topicsTest() {
-        List<String> topicList = topics();
-        log.info("topicList = {}", topicList);
-    }
-
-    @Test
-    public void dataExportTest() throws IOException {
-        List<MessageCount> allMessageCount = Collections.singletonList(new MessageCount("io/github/amzexin/commons/test/all", "2022-05-24", "10000"));
-        dataExport(allMessageCount, new FileOutputStream("logs/kafka消息量统计.xlsx"));
     }
 
     @NoArgsConstructor

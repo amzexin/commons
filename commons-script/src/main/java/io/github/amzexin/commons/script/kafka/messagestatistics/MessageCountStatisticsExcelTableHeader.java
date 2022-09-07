@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all.other.ktmcs;
+package io.github.amzexin.commons.script.kafka.messagestatistics;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,7 +15,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-public class KafkaTopicMessageCountStatisticsExcelTableHeader {
+public class MessageCountStatisticsExcelTableHeader {
     /**
      * 该头部标题所在列，从0开始
      */

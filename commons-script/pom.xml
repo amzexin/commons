@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.amzexin</groupId>
-    <artifactId>commons-test</artifactId>
+    <artifactId>commons-script</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <properties>
@@ -60,25 +60,38 @@
             <scope>test</scope>
         </dependency>
 
-        <!--ntp对时-->
+        <!-- poi -->
         <dependency>
-            <groupId>commons-net</groupId>
-            <artifactId>commons-net</artifactId>
-            <version>3.8.0</version>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
         </dependency>
 
-        <!--JMS-->
+        <!--redis-->
         <dependency>
-            <groupId>org.apache.geronimo.specs</groupId>
-            <artifactId>geronimo-jms_1.1_spec</artifactId>
-            <version>1.1.1</version>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>3.0.1</version>
         </dependency>
+
+        <!-- 通过跳板机连接redis -->
+        <dependency>
+            <groupId>com.jcraft</groupId>
+            <artifactId>jsch</artifactId>
+            <version>0.1.54</version>
+        </dependency>
+
 
 
     </dependencies>
 
     <build>
-        <finalName>commons-test</finalName><!--指定打包之后jar的名字-->
+        <finalName>commons-script</finalName><!--指定打包之后jar的名字-->
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -96,7 +109,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.github.amzexin.commons.test.gc.GCTest</mainClass>
+                            <mainClass>io.github.amzexin.commons.script.redis.memory.calculator.Main</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

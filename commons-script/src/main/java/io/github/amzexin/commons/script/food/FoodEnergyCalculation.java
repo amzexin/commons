@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.food;
+package io.github.amzexin.commons.script.food;
 
 import io.github.amzexin.commons.util.io.FileUtils;
 

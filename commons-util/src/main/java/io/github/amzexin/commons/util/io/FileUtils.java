@@ -17,6 +17,7 @@ public class FileUtils {
 
     /**
      * 获取文件流
+     * 加载与jar同目录下的文件: filePath写文件件名即可
      *
      * @param filePath 文件路径（相对路径和绝对路径）
      * @return InputStream
