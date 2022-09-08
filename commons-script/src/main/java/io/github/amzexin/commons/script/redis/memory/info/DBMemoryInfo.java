@@ -63,7 +63,7 @@ public class DBMemoryInfo {
     @Override
     public String toString() {
         String humanTotalByteSize = getHumanTotalByteSize();
-        StringBuilder result = new StringBuilder(String.format("db %s (%s)", index, humanTotalByteSize.isEmpty() ? "0B" : getHumanTotalByteSize()));
+        StringBuilder result = new StringBuilder(String.format("db %s (%s), keySize: %s", index, humanTotalByteSize.isEmpty() ? "0B" : getHumanTotalByteSize(), keyByteSizeMap.size()));
         if (topNum <= 0 || keyByteSizeTopNumMemoryInfoMap.isEmpty()) {
             return result.toString();
         }
