@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Description: FileUtils
@@ -51,6 +53,44 @@ public class FileUtils {
         inputStream.read(buffer, 0, inputStream.available());
         inputStream.close();
         return new String(buffer);
+    }
+
+    /**
+     * 递归遍历某目录，并对该目录下的所有文件执行固定的操作
+     *
+     * @param file             需要迭代搜索的目录
+     * @param excludeDirectory 需要过滤的目录
+     * @param consumer         处理方法
+     */
+    public static void recursiveFileConsumer(File file, Set<String> excludeDirectory, Consumer<File> consumer) {
+        if (!file.exists()) {
+            log.info("{} isn't exists", file.getPath());
+            return;
+        }
+
+        if (file.isFile()) {
+            if (!file.canRead()) {
+                log.info("{} can't read", file.getPath());
+                return;
+            }
+            consumer.accept(file);
+            return;
+        }
+
+        if (file.isDirectory()) {
+            if (excludeDirectory.contains(file.getName())) {
+                return;
+            }
+
+            File[] files = file.listFiles();
+            if (files == null || files.length == 0) {
+                return;
+            }
+            log.info("开始遍历 {}", file.getPath());
+            for (File subFile : files) {
+                recursiveFileConsumer(subFile, excludeDirectory, consumer);
+            }
+        }
     }
 
     private FileUtils() {
