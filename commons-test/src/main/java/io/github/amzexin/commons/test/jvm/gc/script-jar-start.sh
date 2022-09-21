@@ -33,6 +33,7 @@ java_opts="${java_opts} -Xmx1g" # 堆区最大值, 默认是服务器的1/4
 #java_opts="${java_opts} -XX:OnOutOfMemoryError=${shell_on_oom_path}" # 可以指定shell命令、shell脚本、其他脚本等，在OOM时执行一些额外的操作（实践证明，是先产生dump文件，再执行配置）
 java_opts="${java_opts} -XX:+UseG1GC"   # 使用G1收集器
 java_opts="${java_opts} -XX:NewRatio=2" # JVM新生代（2个Survivor区和Eden区 ）与老年代（不包括永久区）的堆空间比值，表示新生代：老年代=1：2
+java_opts="${java_opts} -XX:NativeMemoryTracking=detail"  # off: 默认关闭. summary: 只统计各个分类的内存使用情况. detail: Collect memory usage by individual call sites.
 
 # 启动项目
 #java ${java_opts} -jar ${jar_path}

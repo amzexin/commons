@@ -96,7 +96,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>io.github.amzexin.commons.test.gc.GCTest</mainClass>
+                            <mainClass>io.github.amzexin.commons.test.jvm.gc.GCTest</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>

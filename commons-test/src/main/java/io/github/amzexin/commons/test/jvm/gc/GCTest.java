@@ -1,8 +1,9 @@
-package io.github.amzexin.commons.test.gc;
+package io.github.amzexin.commons.test.jvm.gc;
 
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * Description: GCTest
@@ -15,7 +16,7 @@ public class GCTest {
 
     private final static int MB = 1024 * 1024;
 
-    public static void main(String[] args) {
+    private static void oomTest(){
         byte[][] bytes = new byte[2][];
         int index = 0;
         int gcCount = 0;
@@ -43,6 +44,16 @@ public class GCTest {
                 log.error(e.getMessage(), e);
             }
         }
+    }
+
+    private static void javaCommandTest() throws InterruptedException {
+        byte[] bytes = new byte[500 * MB];
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        countDownLatch.await();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        javaCommandTest();
     }
 
 }
