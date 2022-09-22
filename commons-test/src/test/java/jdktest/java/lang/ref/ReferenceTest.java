@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all.jvm.reference;
+package jdktest.java.lang.ref;
 
 import io.github.amzexin.commons.util.lang.SleepUtils;
 import lombok.extern.slf4j.Slf4j;

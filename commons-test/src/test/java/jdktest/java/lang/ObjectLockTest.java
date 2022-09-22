@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all.other;
+package jdktest.java.lang;
 
 import io.github.amzexin.commons.util.lang.SleepUtils;
 import io.github.amzexin.commons.logback.TraceIdUtils;

@@ -1,4 +1,4 @@
-package io.github.amzexin.commons.test.all.other;
+package jdktest.java.lang;
 
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
