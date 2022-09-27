@@ -1,4 +1,4 @@
-package jdktest.java.util.concurrent;
+package io.github.amzexin.commons.test.jdk.java.util.concurrent;
 
 import io.github.amzexin.commons.logback.TraceIdUtils;
 import io.github.amzexin.commons.util.lang.SleepUtils;

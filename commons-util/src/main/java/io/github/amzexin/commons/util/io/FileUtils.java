@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.URL;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -91,6 +92,21 @@ public class FileUtils {
                 recursiveFileConsumer(subFile, excludeDirectory, consumer);
             }
         }
+    }
+
+    /**
+     * 获取配置文件
+     *
+     * @param filePath 文件路径（相对路径和绝对路径）
+     * @return 文件内容
+     * @throws IOException 内容读取出现异常
+     */
+    public static Properties getProperties(String filePath) throws IOException {
+        InputStream inputStream = getInputStream(filePath);
+        Properties properties = new Properties();
+        properties.load(inputStream);
+        inputStream.close();
+        return properties;
     }
 
     private FileUtils() {

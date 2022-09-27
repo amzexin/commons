@@ -1,4 +1,4 @@
-package jdktest.java.beans;
+package io.github.amzexin.commons.test.jdk.java.beans;
 
 import io.github.amzexin.commons.http.HttpResult;
 import lombok.extern.slf4j.Slf4j;
