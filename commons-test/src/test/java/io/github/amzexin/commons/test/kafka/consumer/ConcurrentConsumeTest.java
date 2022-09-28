@@ -59,7 +59,7 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
             this.kafkaConsumer = kafkaConsumer;
             this.concurrentCount = concurrentCount;
             this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
-            this.executorService = Executors.newFixedThreadPool(concurrentCount);
+            this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
             this.consumerRecordConsumer = consumerRecordConsumer;
         }
 
@@ -68,6 +68,7 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
         }
 
         public void consume(ConsumerRecord<String, String> record) throws InterruptedException {
+            // 为了尽可能地保证顺序
             TimeUnit.MILLISECONDS.sleep(10);
             concurrentConsumeSemaphore.acquire();
             executorService.execute(new Runnable() {
