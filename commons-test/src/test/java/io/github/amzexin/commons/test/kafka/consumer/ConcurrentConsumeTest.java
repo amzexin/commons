@@ -46,13 +46,15 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
         /**
          * Record Consumer
          */
-        private final Consumer<ConsumerRecord<String, String>> consumerRecordConsumer;
+        private final Consumer<ConsumerRecord<String, String>> consumerRecordHandler;
         /**
          * kafka consumer client
          */
         private final KafkaConsumer<String, String> kafkaConsumer;
 
-        public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer, int concurrentCount, Consumer<ConsumerRecord<String, String>> consumerRecordConsumer) {
+        public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer,
+                                  int concurrentCount,
+                                  Consumer<ConsumerRecord<String, String>> consumerRecordHandler) {
             if (concurrentCount <= 0) {
                 throw new RuntimeException("concurrentCount必须大于0");
             }
@@ -60,14 +62,16 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
             this.concurrentCount = concurrentCount;
             this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
             this.executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
-            this.consumerRecordConsumer = consumerRecordConsumer;
+            this.consumerRecordHandler = consumerRecordHandler;
         }
 
-        public int getConcurrentCount() {
-            return concurrentCount;
-        }
-
-        public void consume(ConsumerRecord<String, String> record) throws InterruptedException {
+        /**
+         * 异步消费
+         *
+         * @param record
+         * @throws InterruptedException
+         */
+        public void consumeAsync(ConsumerRecord<String, String> record) throws InterruptedException {
             // 为了尽可能地保证顺序
             TimeUnit.MILLISECONDS.sleep(10);
             concurrentConsumeSemaphore.acquire();
@@ -76,11 +80,11 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
                 public void run() {
                     try {
                         TraceIdUtils.setupTraceId();
-                        consumerRecordConsumer.accept(record);
+                        consumerRecordHandler.accept(record);
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
                     } finally {
-                        canCommit(record);
+                        preCommitOffsetMap.put(new TopicPartition(record.topic(), record.partition()), record.offset() + 1);
                         concurrentConsumeSemaphore.release();
                         TraceIdUtils.clearTraceId();
                     }
@@ -88,12 +92,10 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
             });
         }
 
-        private void canCommit(ConsumerRecord<String, String> record) {
-            TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-            preCommitOffsetMap.put(topicPartition, record.offset() + 1);
-        }
-
-        public void commitOffset() {
+        /**
+         * 同步提交
+         */
+        public void commitSync() {
             if (preCommitOffsetMap.isEmpty()) {
                 return;
             }
@@ -141,6 +143,7 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
                 long offset = record.offset();
                 int millis = new Random().nextInt(10) * 1000;
                 log.info("message handle start: topic, partition, offset = [{}, {}, {}] sleep = {}, value = {}", topic, partition, offset, millis, record.value());
+                // 模拟消息处理
                 SleepUtils.sleep(millis);
                 log.info("message handle end: topic, partition, offset = [{}, {}, {}] value = {}", topic, partition, offset, record.value());
             }
@@ -151,7 +154,7 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
         while (true) {
 
             TraceIdUtils.setupTraceId();
-            concurrentConsumer.commitOffset();
+            concurrentConsumer.commitSync();
             ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(1));
             if (records.isEmpty()) {
                 continue;
@@ -163,7 +166,7 @@ public class ConcurrentConsumeTest extends BaseKafkaTest {
             }
 
             for (ConsumerRecord<String, String> record : records) {
-                concurrentConsumer.consume(record);
+                concurrentConsumer.consumeAsync(record);
             }
         }
 
