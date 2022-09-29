@@ -43,7 +43,7 @@ public class ProducerTest extends BaseKafkaTest {
                     if (e != null) {
                         log.error("kafka send error: {}", e.getMessage(), e);
                     } else {
-                        log.info("kafka send success");
+                        log.info("kafka send success: {}", msg);
                     }
                 });
             }
