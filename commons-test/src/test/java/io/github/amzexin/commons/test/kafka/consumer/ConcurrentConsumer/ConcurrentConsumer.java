@@ -102,7 +102,7 @@ public class ConcurrentConsumer {
         }
         // 为了尽可能地保证顺序
         TimeUnit.MILLISECONDS.sleep(10);
-        concurrentConsumeSemaphore.acquire();
+        concurrentConsumeSemaphore.acquire(); // 如果主线程触发停止，但是始终获取不到信号量，就会卡在这里，不太好
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {

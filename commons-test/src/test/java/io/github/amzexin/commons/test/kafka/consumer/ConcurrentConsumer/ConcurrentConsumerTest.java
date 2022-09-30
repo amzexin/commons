@@ -8,6 +8,8 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.errors.InterruptException;
+import org.apache.kafka.common.errors.WakeupException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -62,8 +64,8 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
         thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    while (true) {
+                while (true) {
+                    try {
 
                         TraceIdUtils.setupTraceId();
                         concurrentConsumer.commitSync();
@@ -80,13 +82,18 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
                         for (ConsumerRecord<String, String> record : records) {
                             concurrentConsumer.consumeAsync(record);
                         }
+
+                    } catch (WakeupException e) {
+                        log.warn("主线程触发wakeup, 不再消费", e);
+                        break;
+                    } catch (InterruptedException | InterruptException e) {
+                        log.warn("主线程触发{}, 不再消费", e.getClass().getName(), e);
+                    } catch (Exception e) {
+                        log.error(e.getMessage(), e);
                     }
-                } catch (Exception e) {
-                    log.error(e.getMessage(), e);
-                } finally {
-                    concurrentConsumer.gracefulShutdown();
-                    kafkaConsumer.close();
                 }
+                concurrentConsumer.gracefulShutdown();
+                kafkaConsumer.close();
             }
         }, "main");
         thread.start();
