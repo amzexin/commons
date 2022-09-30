@@ -31,6 +31,8 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
 
     private KafkaConsumer<String, String> kafkaConsumer;
 
+    private ConcurrentConsumer concurrentConsumer;
+
     private Thread thread;
 
 
@@ -44,7 +46,7 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
         consumerProperties.setProperty(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, concurrentCount + "");
 
         kafkaConsumer = createConsumer(consumerProperties);
-        ConcurrentConsumer concurrentConsumer = new ConcurrentConsumer(kafkaConsumer, concurrentCount, new Consumer() {
+        concurrentConsumer = new ConcurrentConsumer(kafkaConsumer, concurrentCount, new Consumer() {
             @Override
             public void accept(Object o) {
                 ConsumerRecord<String, String> record = (ConsumerRecord<String, String>) o;
@@ -83,7 +85,7 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
                             concurrentConsumer.consumeAsync(record);
                         }
 
-                    } catch (WakeupException e) {
+                    } catch (WakeupException | ConcurrentConsumerWakeupException e) {
                         log.warn("主线程触发wakeup, 不再消费", e);
                         break;
                     } catch (InterruptedException | InterruptException e) {
@@ -113,6 +115,7 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
             }
         }
         kafkaConsumer.wakeup();
+        concurrentConsumer.wakeup();
         thread.join(TimeUnit.SECONDS.toMillis(30));
         log.info(">>>>>>>>>>>>>>>>>>>>>>>>over");
     }

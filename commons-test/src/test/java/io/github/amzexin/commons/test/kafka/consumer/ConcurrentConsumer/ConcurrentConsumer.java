@@ -6,12 +6,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.errors.WakeupException;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -31,6 +33,10 @@ public class ConcurrentConsumer {
      * 控制并发消费的信号量
      */
     private final Semaphore concurrentConsumeSemaphore;
+    /**
+     * 这个标志允许客户端被安全地唤醒，而不需要等待信号量的锁。
+     */
+    private final AtomicBoolean wakeup = new AtomicBoolean(false);
     /**
      * 并发消费的线程池
      */
@@ -90,6 +96,18 @@ public class ConcurrentConsumer {
         return state.get() == STOPPED;
     }
 
+    public void wakeup() {
+        wakeup.set(true);
+    }
+
+    public void maybeTriggerWakeup() {
+        if (wakeup.get()) {
+            log.debug("Raising WakeupException in response to user wakeup");
+            wakeup.set(false);
+            throw new ConcurrentConsumerWakeupException();
+        }
+    }
+
     /**
      * 异步消费
      *
@@ -102,7 +120,12 @@ public class ConcurrentConsumer {
         }
         // 为了尽可能地保证顺序
         TimeUnit.MILLISECONDS.sleep(10);
-        concurrentConsumeSemaphore.acquire(); // 如果主线程触发停止，但是始终获取不到信号量，就会卡在这里，不太好
+        while (true) {
+            maybeTriggerWakeup();
+            if (concurrentConsumeSemaphore.tryAcquire()) {
+                break;
+            }
+        }
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
