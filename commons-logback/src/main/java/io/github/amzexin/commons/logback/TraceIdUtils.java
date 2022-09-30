@@ -24,18 +24,19 @@ public class TraceIdUtils {
     /**
      * 设置traceId
      */
-    public static void setupTraceId() {
-        setupTraceId(null);
+    public static String setupTraceId() {
+        return setupTraceId(null);
     }
 
     /**
      * 设置traceId
      */
-    public static void setupTraceId(String traceId) {
+    public static String setupTraceId(String traceId) {
         if (traceId == null || traceId.isEmpty()) {
             traceId = UUID.randomUUID().toString().replaceAll("-", "");
         }
         MDC.put(TRACE_ID_KEY, traceId);
+        return traceId;
     }
 
     /**

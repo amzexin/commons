@@ -30,11 +30,16 @@ public class ConcurrentConsumer {
      */
     private final int concurrentCount;
     /**
+     * 运行中任务的trace信息
+     * key: traceId; value: 任务开始执行时间
+     */
+    private final Map<String, Long> runningTaskTraceInfos;
+    /**
      * 控制并发消费的信号量
      */
     private final Semaphore concurrentConsumeSemaphore;
     /**
-     * 这个标志允许客户端被安全地唤醒，而不需要等待信号量的锁。
+     * 这个标志允许客户端被安全地唤醒, 而不需要等待信号量的锁。
      */
     private final AtomicBoolean wakeup = new AtomicBoolean(false);
     /**
@@ -67,21 +72,24 @@ public class ConcurrentConsumer {
     /**
      * shutdown时最大的等待时间
      */
-    private final Duration shutdownTimeout = Duration.ofSeconds(10);
+    private final Duration shutdownTimeout;
 
-    public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer,
-                              int concurrentCount,
+    public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer, int concurrentCount,
                               Consumer<ConsumerRecord<String, String>> consumerRecordHandler) {
         if (concurrentCount <= 0) {
             throw new RuntimeException("concurrentCount必须大于0");
         }
         this.kafkaConsumer = kafkaConsumer;
         this.concurrentCount = concurrentCount;
+        this.runningTaskTraceInfos = new ConcurrentHashMap<>();
         this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
-        int nThreads = Runtime.getRuntime().availableProcessors() * 2;
-        this.threadPoolExecutor = new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>());
+        this.threadPoolExecutor = new ThreadPoolExecutor(
+                Math.min(Runtime.getRuntime().availableProcessors(), concurrentCount),
+                Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
+                0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         this.consumerRecordHandler = consumerRecordHandler;
         this.state = new AtomicInteger(STARTED);
+        this.shutdownTimeout = Duration.ofSeconds(concurrentCount);
     }
 
     public boolean isStarted() {
@@ -104,7 +112,7 @@ public class ConcurrentConsumer {
         if (wakeup.get()) {
             log.debug("Raising WakeupException in response to user wakeup");
             wakeup.set(false);
-            throw new ConcurrentConsumerWakeupException();
+            throw new ConcurrentConsumerWakeupException("ConcurrentConsumer被Wakeup");
         }
     }
 
@@ -116,26 +124,45 @@ public class ConcurrentConsumer {
      */
     public void consumeAsync(ConsumerRecord<String, String> record) throws InterruptedException {
         if (!isStarted()) {
-            throw new RuntimeException("已不在运行状态，不允许继续消费");
+            throw new RuntimeException("已不在运行状态, 不允许继续消费");
         }
-        // 为了尽可能地保证顺序
+        // 为了尽可能地保证顺序, sleep 10ms
         TimeUnit.MILLISECONDS.sleep(10);
+
         while (true) {
+            // 检查是否被唤醒
             maybeTriggerWakeup();
-            if (concurrentConsumeSemaphore.tryAcquire()) {
+            // 争抢信号量
+            if (concurrentConsumeSemaphore.tryAcquire(1, TimeUnit.SECONDS)) {
                 break;
             }
         }
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
+                String traceId = TraceIdUtils.setupTraceId();
                 try {
-                    TraceIdUtils.setupTraceId();
+                    // 记录任务开始执行的信息
+                    runningTaskTraceInfos.put(traceId, System.currentTimeMillis());
+                    // 执行真正的任务
                     consumerRecordHandler.accept(record);
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
                 } finally {
-                    preCommitOffsetMap.put(new TopicPartition(record.topic(), record.partition()), record.offset() + 1);
+                    // 将需要提交的offset的添加到preCommitOffsetMap
+                    long newPreCommitOffset = record.offset() + 1;
+                    TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
+                    // 下面的操作是为了避免小的offset被提交
+                    while (true) {
+                        Long oldPreCommitOffset = preCommitOffsetMap.put(topicPartition, newPreCommitOffset);
+                        if (oldPreCommitOffset == null || oldPreCommitOffset < newPreCommitOffset) {
+                            break;
+                        }
+                        newPreCommitOffset = oldPreCommitOffset;
+                    }
+                    // 移除运行中任务的信息
+                    runningTaskTraceInfos.remove(traceId);
+                    // 释放信号量
                     concurrentConsumeSemaphore.release();
                     TraceIdUtils.clearTraceId();
                 }
@@ -180,27 +207,40 @@ public class ConcurrentConsumer {
         }
 
         log.info("ConcurrentConsumer开始关闭");
-        // 关闭之前，先将任务执行完。shutdownTimeout即为超时时间。关闭期间每隔1s打印一下线程池运行情况
+        // 关闭之前, 先将任务执行完。shutdownTimeout即为超时时间。关闭期间每隔1s打印一下线程池运行情况
         long waitSeconds = shutdownTimeout.getSeconds();
         int availablePermits;
         while ((availablePermits = concurrentConsumeSemaphore.availablePermits()) != concurrentCount && waitSeconds > 0) {
-            int activeCount = threadPoolExecutor.getActiveCount();
-            BlockingQueue<Runnable> blockingQueue = threadPoolExecutor.getQueue();
-            log.info("ConcurrentConsumer关闭中, 倒数: {}, 线程池: (活跃线程数: {}, 等待队列任务数: {})", waitSeconds, activeCount, blockingQueue.size());
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
-                log.warn("关闭过程中，主线程发生interrupt");
+                log.warn("ConcurrentConsumer优雅关闭过程中, 主线程触发interrupt, 忽略它继续优雅关闭");
             }
             waitSeconds--;
+            int activeCount = threadPoolExecutor.getActiveCount();
+            BlockingQueue<Runnable> blockingQueue = threadPoolExecutor.getQueue();
+            log.info("ConcurrentConsumer关闭中, 倒数: {}, 线程池: (活跃线程数: {}, 等待队列中任务数: {})", waitSeconds, activeCount, blockingQueue.size());
         }
 
-        commitSync();
-        state.compareAndSet(STOPPING, STOPPED);
-        if (availablePermits == concurrentCount) {
-            log.info("ConcurrentConsumer正常关闭 噢耶(^o^)");
-        } else {
-            log.error("ConcurrentConsumer超时关闭 偶买噶！！！！！！！！！！！！");
+        try {
+            commitSync();
+        } catch (WakeupException e) {
+            log.warn("没有将KafkaConsumer中wakeup标志位重置, 重新提交一下");
+            commitSync();
         }
+
+        state.compareAndSet(STOPPING, STOPPED);
+        if (availablePermits != concurrentCount) {
+            // 项目在关闭的时候会尽可能的做到优雅关闭, 等待了这么久都没有处理完, 业务逻辑必定存在某些问题
+            log.error("ConcurrentConsumer超时{}关闭 偶买噶！！！！！！！！！！！！ 这意味着消息有可能被重复消费, 也有可能某个消息被强制中断且再也不会被执行.", shutdownTimeout);
+            log.warn("没有执行完的任务有{}({})个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", concurrentCount - availablePermits
+                    , concurrentCount - concurrentConsumeSemaphore.availablePermits());
+            runningTaskTraceInfos.forEach((traceId, executeStartTimestamp) ->
+                    log.warn("traceId = {}, handleTime = {}ms", traceId, System.currentTimeMillis() - executeStartTimestamp)
+            );
+            return;
+        }
+
+        log.info("ConcurrentConsumer正常关闭 噢耶(^o^)");
     }
 }

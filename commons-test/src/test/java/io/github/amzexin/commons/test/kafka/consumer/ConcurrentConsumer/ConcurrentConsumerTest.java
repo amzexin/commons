@@ -70,7 +70,6 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
                     try {
 
                         TraceIdUtils.setupTraceId();
-                        concurrentConsumer.commitSync();
                         ConsumerRecords<String, String> records = kafkaConsumer.poll(Duration.ofSeconds(1));
                         if (records.isEmpty()) {
                             continue;
@@ -86,12 +85,18 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
                         }
 
                     } catch (WakeupException | ConcurrentConsumerWakeupException e) {
-                        log.warn("主线程触发wakeup, 不再消费", e);
+                        log.warn("主线程触发{}, 不再poll消息", e.getClass().getName());
                         break;
                     } catch (InterruptedException | InterruptException e) {
-                        log.warn("主线程触发{}, 不再消费", e.getClass().getName(), e);
+                        log.warn("主线程触发{}, 不再poll消息", e.getClass().getName(), e);
                     } catch (Exception e) {
                         log.error(e.getMessage(), e);
+                    } finally {
+                        try {
+                            concurrentConsumer.commitSync();
+                        } catch (Exception e) {
+                            log.error(e.getMessage(), e);
+                        }
                     }
                 }
                 concurrentConsumer.gracefulShutdown();
@@ -106,6 +111,25 @@ public class ConcurrentConsumerTest extends BaseKafkaTest {
      */
     @Test
     public void testConcurrentConsume() throws InterruptedException {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print("是否停止(y/n): ");
+            String str = scanner.nextLine();
+            if ("y".equalsIgnoreCase(str)) {
+                break;
+            }
+        }
+        kafkaConsumer.wakeup();
+        concurrentConsumer.wakeup();
+        thread.join(TimeUnit.SECONDS.toMillis(30));
+        log.info(">>>>>>>>>>>>>>>>>>>>>>>>over");
+    }
+
+    /**
+     * 并发消费
+     */
+    @Test
+    public void testConcurrentConsumeInReBalance() throws InterruptedException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.print("是否停止(y/n): ");
