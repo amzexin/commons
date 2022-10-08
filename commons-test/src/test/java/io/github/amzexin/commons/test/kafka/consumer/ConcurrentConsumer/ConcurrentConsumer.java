@@ -239,7 +239,8 @@ public class ConcurrentConsumer {
         if (availablePermits != concurrentCount) {
             // 项目在关闭的时候会尽可能的做到优雅关闭, 等待了这么久都没有处理完, 业务逻辑必定存在某些问题
             log.error("ConcurrentConsumer[{}]超时{}关闭 偶买噶！！！！！！！！！！！！ 这意味着消息有可能被重复消费, 也有可能某个消息被强制中断且再也不会被执行.", name, shutdownTimeout);
-            log.warn("没有执行完的任务有{}({})个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", concurrentCount - availablePermits
+            log.warn("ConcurrentConsumer[{}]没有执行完的任务有{}({})个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", name
+                    , concurrentCount - availablePermits
                     , concurrentCount - concurrentConsumeSemaphore.availablePermits());
             runningTaskTraceInfos.forEach((traceId, executeStartTimestamp) ->
                     log.warn("traceId = {}, handleTime = {}ms", traceId, System.currentTimeMillis() - executeStartTimestamp)
