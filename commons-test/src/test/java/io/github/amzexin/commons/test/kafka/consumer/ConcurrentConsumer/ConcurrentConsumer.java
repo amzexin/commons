@@ -1,12 +1,12 @@
 package io.github.amzexin.commons.test.kafka.consumer.ConcurrentConsumer;
 
-import io.github.amzexin.commons.logback.TraceIdUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import org.slf4j.MDC;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -31,10 +31,11 @@ public class ConcurrentConsumer {
      */
     private final int concurrentCount;
     /**
-     * 运行中任务的trace信息
-     * key: traceId; value: 任务开始执行时间
+     * 运行中的record
+     * key: recordId
+     * value: ConsumerRecordWrapper
      */
-    private final Map<String, Long> runningTaskTraceInfos;
+    private final Map<String, ConsumerRecordWrapper<String, String>> runningRecords;
     /**
      * 控制并发消费的信号量
      */
@@ -86,16 +87,16 @@ public class ConcurrentConsumer {
         }
         this.kafkaConsumer = kafkaConsumer;
         this.concurrentCount = concurrentCount;
-        this.runningTaskTraceInfos = new ConcurrentHashMap<>();
+        this.runningRecords = new ConcurrentHashMap<>();
         this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
         this.threadPoolExecutor = new ThreadPoolExecutor(
-                Math.min(Runtime.getRuntime().availableProcessors(), concurrentCount),
+                Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
                 Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
                 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>());
         this.consumerRecordHandler = consumerRecordHandler;
         this.state = new AtomicInteger(STARTED);
         this.shutdownTimeout = Duration.ofSeconds(concurrentCount);
-        this.name = UUID.randomUUID().toString().replaceAll("-", "");
+        this.name = UUID.randomUUID().toString().replaceAll("-", "").substring(16);
     }
 
     public boolean isStarted() {
@@ -146,11 +147,12 @@ public class ConcurrentConsumer {
         threadPoolExecutor.execute(new Runnable() {
             @Override
             public void run() {
-                String traceId = TraceIdUtils.setupTraceId();
+                ConsumerRecordWrapper<String, String> consumerRecordWrapper = new ConsumerRecordWrapper<>(record);
                 try {
                     // 记录任务开始执行的信息
-                    runningTaskTraceInfos.put(traceId, System.currentTimeMillis());
+                    runningRecords.put(consumerRecordWrapper.getId(), consumerRecordWrapper);
                     // 执行真正的任务
+
                     consumerRecordHandler.accept(record);
                 } catch (Exception e) {
                     log.error(e.getMessage(), e);
@@ -167,10 +169,10 @@ public class ConcurrentConsumer {
                         newPreCommitOffset = oldPreCommitOffset;
                     }
                     // 移除运行中任务的信息
-                    runningTaskTraceInfos.remove(traceId);
+                    runningRecords.remove(consumerRecordWrapper.getId());
                     // 释放信号量
                     concurrentConsumeSemaphore.release();
-                    TraceIdUtils.clearTraceId();
+                    MDC.remove("trace_id");
                 }
             }
         });
@@ -193,7 +195,7 @@ public class ConcurrentConsumer {
             if (committedOffset == null || preCommitOffset > committedOffset) {
                 kafkaConsumer.commitSync(Collections.singletonMap(topicPartition, new OffsetAndMetadata(preCommitOffset)));
                 committedOffsetMap.put(topicPartition, preCommitOffset);
-                log.info("ConcurrentConsumer[{}] offset commit success, topicPartition = {}, preCommitOffset = {}", name, topicPartition, preCommitOffset);
+                log.debug("ConcurrentConsumer[{}] offset commit success, topicPartition = {}, preCommitOffset = {}", name, topicPartition, preCommitOffset);
             }
         }
     }
@@ -242,8 +244,8 @@ public class ConcurrentConsumer {
             log.warn("ConcurrentConsumer[{}]没有执行完的任务有{}({})个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", name
                     , concurrentCount - availablePermits
                     , concurrentCount - concurrentConsumeSemaphore.availablePermits());
-            runningTaskTraceInfos.forEach((traceId, executeStartTimestamp) ->
-                    log.warn("traceId = {}, handleTime = {}ms", traceId, System.currentTimeMillis() - executeStartTimestamp)
+            runningRecords.forEach((recordId, consumerRecordWrapper) ->
+                    log.warn("recordId = {}, handleTime = {}ms, recordValue = {}", recordId, System.currentTimeMillis() - consumerRecordWrapper.getExecuteStartTimestamp(), consumerRecordWrapper.recordValue())
             );
             return;
         }
