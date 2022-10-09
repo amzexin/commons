@@ -82,13 +82,7 @@ public class ConcurrentConsumer {
 
     public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer, int concurrentCount,
                               Consumer<ConsumerRecord<String, String>> consumerRecordHandler) {
-        this(kafkaConsumer, concurrentCount, consumerRecordHandler,
-                new ThreadPoolExecutor(
-                        Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
-                        Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
-                        0L, TimeUnit.MILLISECONDS,
-                        new LinkedBlockingQueue<>()
-                ));
+        this(kafkaConsumer, concurrentCount, consumerRecordHandler, null);
     }
 
     public ConcurrentConsumer(KafkaConsumer<String, String> kafkaConsumer, int concurrentCount,
@@ -101,13 +95,20 @@ public class ConcurrentConsumer {
         this.concurrentCount = concurrentCount;
         this.runningRecords = new ConcurrentHashMap<>();
         this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
+        if (threadPoolExecutor == null) {
+            threadPoolExecutor = new ThreadPoolExecutor(
+                    Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
+                    Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
+                    0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>()
+            );
+        }
         this.threadPoolExecutor = threadPoolExecutor;
         this.consumerRecordHandler = consumerRecordHandler;
         this.state = new AtomicInteger(STARTED);
         this.shutdownTimeout = Duration.ofSeconds(concurrentCount);
         this.name = UUID.randomUUID().toString().replaceAll("-", "").substring(16);
     }
-
 
     public boolean isStarted() {
         return state.get() == STARTED;
