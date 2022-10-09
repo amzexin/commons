@@ -49,13 +49,13 @@ public class ConcurrentConsumer {
      */
     private final ThreadPoolExecutor threadPoolExecutor;
     /**
-     * 当前已提交的commit
-     */
-    private final Map<TopicPartition, Long> committedOffsetMap = new ConcurrentHashMap<>();
-    /**
      * 当前可以提交的offset
      */
     private final Map<TopicPartition, Long> preCommitOffsetMap = new ConcurrentHashMap<>();
+    /**
+     * 当前已提交的commit
+     */
+    private final Map<TopicPartition, Long> committedOffsetMap = new ConcurrentHashMap<>();
     /**
      * Record Consumer
      */
@@ -169,16 +169,11 @@ public class ConcurrentConsumer {
                     log.error(e.getMessage(), e);
                 } finally {
                     // 将需要提交的offset的添加到preCommitOffsetMap
-                    long newPreCommitOffset = record.offset() + 1;
+                    final long newPreCommitOffset = record.offset() + 1;
                     TopicPartition topicPartition = new TopicPartition(record.topic(), record.partition());
-                    // 下面的操作是为了避免小的offset被提交
-                    while (true) {
-                        Long oldPreCommitOffset = preCommitOffsetMap.put(topicPartition, newPreCommitOffset);
-                        if (oldPreCommitOffset == null || oldPreCommitOffset < newPreCommitOffset) {
-                            break;
-                        }
-                        newPreCommitOffset = oldPreCommitOffset;
-                    }
+                    preCommitOffsetMap.compute(topicPartition, (topicPartition1, oldPreCommitOffset) ->
+                            oldPreCommitOffset == null || newPreCommitOffset > oldPreCommitOffset ? newPreCommitOffset : oldPreCommitOffset
+                    );
                     // 移除运行中任务的信息
                     runningRecords.remove(consumerRecordWrapper.getId());
                     // 释放信号量
@@ -196,17 +191,29 @@ public class ConcurrentConsumer {
         if (preCommitOffsetMap.isEmpty()) {
             return;
         }
-        Set<TopicPartition> topicPartitions = preCommitOffsetMap.keySet();
-        for (TopicPartition topicPartition : topicPartitions) {
-            Long preCommitOffset = preCommitOffsetMap.remove(topicPartition);
-            if (preCommitOffset == null) {
-                continue;
-            }
-            Long committedOffset = committedOffsetMap.get(topicPartition);
-            if (committedOffset == null || preCommitOffset > committedOffset) {
-                kafkaConsumer.commitSync(Collections.singletonMap(topicPartition, new OffsetAndMetadata(preCommitOffset)));
-                committedOffsetMap.put(topicPartition, preCommitOffset);
-                log.debug("ConcurrentConsumer[{}] offset commit success, topicPartition = {}, preCommitOffset = {}", name, topicPartition, preCommitOffset);
+        synchronized (this) {
+            // 将待提交的offset提交上去
+            Set<TopicPartition> topicPartitions = preCommitOffsetMap.keySet();
+            for (TopicPartition topicPartition : topicPartitions) {
+                preCommitOffsetMap.compute(topicPartition, (key, preCommitOffset) -> {
+                    // 实际应该不会为null, 但为了健壮考虑加了此判断
+                    if (preCommitOffset == null) {
+                        return null;
+                    }
+
+                    // 提交offset操作
+                    Long committedOffset = committedOffsetMap.get(key);
+                    if (committedOffset == null || preCommitOffset > committedOffset) {
+                        kafkaConsumer.commitSync(Collections.singletonMap(key, new OffsetAndMetadata(preCommitOffset)));
+                        committedOffsetMap.put(key, preCommitOffset);
+                        log.debug("ConcurrentConsumer[{}] offset commit success, topicPartition = {}, preCommitOffset = {}", name, key, preCommitOffset);
+                        // 返回null表示从preCommitOffsetMap移除该项, 到这一块说明真正的提交成功了, preCommitOffsetMap不需要保留此项
+                        return null;
+                    }
+
+                    // 说明待提交的offset小于已经提交的offset, 返回null后, preCommitOffsetMap会删除该项
+                    return null;
+                });
             }
         }
     }
