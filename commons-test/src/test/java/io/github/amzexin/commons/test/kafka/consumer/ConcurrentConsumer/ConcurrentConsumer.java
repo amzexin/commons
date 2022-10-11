@@ -97,8 +97,8 @@ public class ConcurrentConsumer {
         this.concurrentConsumeSemaphore = new Semaphore(concurrentCount);
         if (threadPoolExecutor == null) {
             threadPoolExecutor = new ThreadPoolExecutor(
-                    Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
-                    Math.min(Runtime.getRuntime().availableProcessors() * 2, concurrentCount),
+                    Math.min(Runtime.getRuntime().availableProcessors(), concurrentCount),
+                    Math.min(Runtime.getRuntime().availableProcessors(), concurrentCount),
                     0L, TimeUnit.MILLISECONDS,
                     new LinkedBlockingQueue<>()
             );
