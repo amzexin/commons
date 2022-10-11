@@ -144,8 +144,6 @@ public class ConcurrentConsumer {
         if (!isStarted()) {
             throw new RuntimeException("ConcurrentConsumer[" + name + "]已不在运行状态, 不允许继续消费");
         }
-        // 为了尽可能地保证顺序, sleep 10ms
-        TimeUnit.MILLISECONDS.sleep(10);
 
         while (true) {
             // 检查是否被唤醒
