@@ -6,12 +6,12 @@ package io.github.amzexin.commons.test.kafka.consumer.ConcurrentConsumer;
  * @author Lizexin
  * @date 2022-09-30 11:45
  */
-public class ConcurrentConsumerWakeupException extends RuntimeException {
+public class CkcWakeupException extends RuntimeException {
 
-    public ConcurrentConsumerWakeupException() {
+    public CkcWakeupException() {
     }
 
-    public ConcurrentConsumerWakeupException(String message) {
+    public CkcWakeupException(String message) {
         super(message);
     }
 }

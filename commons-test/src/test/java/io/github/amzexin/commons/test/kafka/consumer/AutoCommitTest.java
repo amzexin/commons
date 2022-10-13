@@ -31,7 +31,7 @@ public class AutoCommitTest extends BaseKafkaTest {
         Properties consumerProperties = getBaseConsumerProperties();
         consumerProperties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
         consumerProperties.setProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-        KafkaConsumer<String, String> consumer = createConsumer(consumerProperties);
+        KafkaConsumer<String, String> consumer = createConsumer(consumerProperties, null);
         SleepUtils.sleep(2000);
         log.info("consumer is ok");
 

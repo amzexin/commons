@@ -34,19 +34,6 @@ public class ProducerTest extends BaseKafkaTest {
         int num = 0;
         int msgId = 0;
         while (true) {
-            for (String producerSendTopic : producerSendTopics) {
-                String traceId = UUID.randomUUID().toString().replaceAll("-", "");
-                String msg = String.format("%s - %d", traceId, msgId++);
-                // kafkaProducer.send(new ProducerRecord<>(producerSendTopic, msg), (recordMetadata, e) -> {
-                kafkaProducer.send(new ProducerRecord<>(producerSendTopic, 0, null, msg), (recordMetadata, e) -> {
-                    TraceIdUtils.setupTraceId(traceId);
-                    if (e != null) {
-                        log.error("kafka send error: {}", e.getMessage(), e);
-                    } else {
-                        log.info("kafka send success: {}", msg);
-                    }
-                });
-            }
             if (num <= 1) {
                 System.out.print("请输入要发送的消息数: ");
                 Scanner scanner = new Scanner(System.in);
@@ -54,6 +41,19 @@ public class ProducerTest extends BaseKafkaTest {
                 num = Math.max(num, 1);
             } else {
                 num--;
+            }
+            for (String producerSendTopic : producerSendTopics) {
+                String traceId = UUID.randomUUID().toString().replaceAll("-", "");
+                String msg = String.format("%s - %d", traceId, msgId++);
+                // kafkaProducer.send(new ProducerRecord<>(producerSendTopic, msg), (recordMetadata, e) -> {
+                kafkaProducer.send(new ProducerRecord<>(producerSendTopic, msgId % 3, null, msg), (recordMetadata, e) -> {
+                    TraceIdUtils.setupTraceId(traceId);
+                    if (e != null) {
+                        log.error("kafka send error: {}", e.getMessage(), e);
+                    } else {
+                        log.info("kafka send success: {}", msg);
+                    }
+                });
             }
         }
 
