@@ -93,6 +93,10 @@ public class ConcurrentKafkaConsumer {
      * 消费者的名字
      */
     private String name;
+    /**
+     * 包装名称
+     */
+    private String wrapName;
 
     public ConcurrentKafkaConsumer(Properties properties) {
         this(properties, null);
@@ -116,6 +120,7 @@ public class ConcurrentKafkaConsumer {
         this.state = new AtomicInteger(NEW);
         this.shutdownTimeout = Duration.ofSeconds(INFLIGHT_WINDOW_SIZE * 2L);
         this.name = UUID.randomUUID().toString().replaceAll("-", "").substring(16);
+        this.wrapName = "ConcurrentKafkaConsumer[" + name + "]";
     }
 
     public boolean isNew() {
@@ -140,9 +145,9 @@ public class ConcurrentKafkaConsumer {
 
     public void maybeTriggerWakeup() {
         if (wakeup.get()) {
-            log.debug("ConcurrentKafkaConsumer[" + name + "]Raising WakeupException in response to user wakeup");
+            log.debug("{} Raising WakeupException in response to user wakeup", wrapName);
             wakeup.set(false);
-            throw new CkcWakeupException("ConcurrentKafkaConsumer[" + name + "]被Wakeup");
+            throw new CkcWakeupException(wrapName + "被Wakeup");
         }
     }
 
@@ -155,7 +160,7 @@ public class ConcurrentKafkaConsumer {
     private void consumeAsync(ConsumerRecord<String, String> record) throws InterruptedException {
         do {
             if (!isStarted()) {
-                throw new CkcNotStartedException("ConcurrentKafkaConsumer[" + name + "]已不在运行状态, 不允许继续消费");
+                throw new CkcNotStartedException(wrapName + "已不在运行状态, 不允许继续消费");
             }
             // 检查是否被唤醒
             maybeTriggerWakeup();
@@ -230,7 +235,7 @@ public class ConcurrentKafkaConsumer {
                     if (committedOffset == null || preCommitOffset > committedOffset) {
                         this.kafkaConsumer.commitSync(Collections.singletonMap(key, new OffsetAndMetadata(preCommitOffset)));
                         this.committedOffsetMap.put(key, preCommitOffset);
-                        log.debug("ConcurrentKafkaConsumer[{}] offset commit success, topicPartition = {}, preCommitOffset = {}", this.name, key, preCommitOffset);
+                        log.debug("{} offset commit success, topicPartition = {}, preCommitOffset = {}", this.wrapName, key, preCommitOffset);
                         // 返回null表示从preCommitOffsetMap移除该项, 到这一块说明真正的提交成功了, preCommitOffsetMap不需要保留此项
                         return null;
                     }
@@ -253,10 +258,10 @@ public class ConcurrentKafkaConsumer {
             throw new RuntimeException("recordConsumer不允许为空");
         }
         if (isStopping()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]正在停止中, 不允许订阅topic");
+            throw new RuntimeException(wrapName + "正在停止中, 不允许订阅topic");
         }
         if (isClosed()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]已停止, 不允许订阅topic");
+            throw new RuntimeException(wrapName + "已停止, 不允许订阅topic");
         }
 
         // 过滤已经订阅的topic
@@ -282,16 +287,16 @@ public class ConcurrentKafkaConsumer {
      */
     public void pollAsync() {
         if (isStarted()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]已在运行中, 不允许重复开启消费");
+            throw new RuntimeException(wrapName + "已在运行中, 不允许重复开启消费");
         }
         if (isStopping()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]正在停止中, 不允许开启消费");
+            throw new RuntimeException(wrapName + "正在停止中, 不允许开启消费");
         }
         if (isClosed()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]已停止, 不允许开启消费");
+            throw new RuntimeException(wrapName + "已停止, 不允许开启消费");
         }
         if (!state.compareAndSet(NEW, STARTED)) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]当前状态[" + state.get() + "]无法开启消费");
+            throw new RuntimeException(wrapName + "当前状态[" + state.get() + "]无法开启消费");
         }
         new Thread(new Runnable() {
             @Override
@@ -320,16 +325,16 @@ public class ConcurrentKafkaConsumer {
                             commitSync();
                         }
                     } catch (WakeupException | CkcWakeupException e) {
-                        log.warn("主线程触发{}", e.getClass().getName());
+                        log.warn("{}主线程触发{}", wrapName, e.getClass().getName());
                     } catch (CkcNotStartedException e) {
                         break;
                     } catch (Exception e) {
-                        log.error(e.getMessage(), e);
+                        log.error("{}出现异常: {}", wrapName, e.getMessage(), e);
                     }
                 }
-                log.warn("不再poll消息, 请知悉");
+                log.warn("{}不再poll消息, 请知悉", wrapName);
             }
-        }, "ConcurrentKafkaConsumer[" + name + "]").start();
+        }, wrapName).start();
     }
 
     /**
@@ -340,13 +345,13 @@ public class ConcurrentKafkaConsumer {
             return;
         }
         if (isStopping()) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]正在关闭中, 不允许重复关闭");
+            throw new RuntimeException(wrapName + "正在关闭中, 不允许重复关闭");
         }
         if (!state.compareAndSet(STARTED, CLOSING) && !state.compareAndSet(NEW, CLOSING)) {
-            throw new RuntimeException("ConcurrentKafkaConsumer[" + name + "]当前状态[" + state.get() + "]无法关闭");
+            throw new RuntimeException(wrapName + "当前状态[" + state.get() + "]无法关闭");
         }
 
-        log.info("ConcurrentKafkaConsumer[{}]开始关闭", name);
+        log.info("{}开始关闭", wrapName);
         kafkaConsumer.wakeup();
         wakeup();
         // 关闭之前, 先将任务执行完。shutdownTimeout即为超时时间。关闭期间每隔1s打印一下线程池运行情况
@@ -356,23 +361,23 @@ public class ConcurrentKafkaConsumer {
             try {
                 TimeUnit.SECONDS.sleep(1);
             } catch (InterruptedException e) {
-                log.warn("ConcurrentKafkaConsumer[{}]优雅关闭过程中, 主线程触发interrupt, 忽略它继续优雅关闭", name);
+                log.warn("{}优雅关闭过程中, 主线程触发interrupt, 忽略它继续优雅关闭", wrapName);
             }
             waitSeconds--;
             int activeCount = threadPoolExecutor.getActiveCount();
             BlockingQueue<Runnable> blockingQueue = threadPoolExecutor.getQueue();
-            log.info("ConcurrentKafkaConsumer[{}]关闭中, 倒数: {}, 信号量: {}({}), 线程池: (活跃线程数: {}, 等待队列中任务数: {})",
-                    name, waitSeconds, availablePermits, INFLIGHT_WINDOW_SIZE, activeCount, blockingQueue.size());
+            log.info("{}关闭中, 倒数: {}, 信号量: {}({}), 线程池: (活跃线程数: {}, 等待队列中任务数: {})",
+                    wrapName, waitSeconds, availablePermits, INFLIGHT_WINDOW_SIZE, activeCount, blockingQueue.size());
         }
 
         try {
             commitSync();
         } catch (WakeupException e) {
-            log.warn("{}, 没有将KafkaConsumer中wakeup标志位重置, 重新提交一下", name);
+            log.warn("{}没有将KafkaConsumer中wakeup标志位重置, 重新提交一下", wrapName);
             commitSync();
         }
 
-        log.info("ConcurrentKafkaConsumer[{}]开始关闭KafkaConsumer", name);
+        log.info("{}开始关闭KafkaConsumer", wrapName);
         synchronized (this.kafkaConsumer) {
             this.kafkaConsumer.close();
         }
@@ -380,14 +385,14 @@ public class ConcurrentKafkaConsumer {
         state.compareAndSet(CLOSING, CLOSED);
         if (availablePermits != INFLIGHT_WINDOW_SIZE) {
             // 项目在关闭的时候会尽可能的做到优雅关闭, 等待了这么久都没有处理完, 业务逻辑必定存在某些问题
-            log.error("ConcurrentKafkaConsumer[{}]超时{}关闭 偶买噶！！！！！！！！！！！！ 这意味着消息有可能被重复消费, 也有可能某个消息被强制中断且再也不会被执行.", name, shutdownTimeout);
-            log.warn("ConcurrentKafkaConsumer[{}]没有执行完的任务有{}个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", name
+            log.error("{}超时{}关闭 偶买噶！！！！！！！！！！！！ 这意味着消息有可能被重复消费, 也有可能某个消息被强制中断且再也不会被执行.", wrapName, shutdownTimeout);
+            log.warn("{}没有执行完的任务有{}个, 请重点关注他们, 到目前为止, 他们执行耗时情况如下", wrapName
                     , INFLIGHT_WINDOW_SIZE - availablePermits);
             runningRecords.forEach((recordId, consumerRecordWrapper) ->
                     log.warn("recordId = {}, handleTime = {}ms, recordValue = {}", recordId, System.currentTimeMillis() - consumerRecordWrapper.getExecuteStartTimestamp(), consumerRecordWrapper.recordValue())
             );
         } else {
-            log.info("ConcurrentKafkaConsumer[{}]正常关闭 噢耶(^o^)", name);
+            log.info("{}正常关闭 噢耶(^o^)", wrapName);
         }
     }
 }
