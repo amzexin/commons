@@ -372,6 +372,11 @@ public class ConcurrentKafkaConsumer {
             commitSync();
         }
 
+        log.info("ConcurrentKafkaConsumer[{}]开始关闭KafkaConsumer", name);
+        synchronized (this.kafkaConsumer) {
+            this.kafkaConsumer.close();
+        }
+
         state.compareAndSet(CLOSING, CLOSED);
         if (availablePermits != INFLIGHT_WINDOW_SIZE) {
             // 项目在关闭的时候会尽可能的做到优雅关闭, 等待了这么久都没有处理完, 业务逻辑必定存在某些问题
@@ -381,13 +386,8 @@ public class ConcurrentKafkaConsumer {
             runningRecords.forEach((recordId, consumerRecordWrapper) ->
                     log.warn("recordId = {}, handleTime = {}ms, recordValue = {}", recordId, System.currentTimeMillis() - consumerRecordWrapper.getExecuteStartTimestamp(), consumerRecordWrapper.recordValue())
             );
-            return;
+        } else {
+            log.info("ConcurrentKafkaConsumer[{}]正常关闭 噢耶(^o^)", name);
         }
-
-        log.info("ConcurrentKafkaConsumer[{}]开始关闭KafkaConsumer", name);
-        synchronized (this.kafkaConsumer) {
-            this.kafkaConsumer.close();
-        }
-        log.info("ConcurrentKafkaConsumer[{}]正常关闭 噢耶(^o^)", name);
     }
 }
