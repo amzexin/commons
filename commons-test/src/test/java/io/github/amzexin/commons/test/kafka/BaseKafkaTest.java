@@ -1,14 +1,13 @@
 package io.github.amzexin.commons.test.kafka;
 
 import io.github.amzexin.commons.util.io.FileUtils;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.common.TopicPartition;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +73,7 @@ public class BaseKafkaTest {
         return result;
     }
 
-    protected KafkaConsumer<String, String> createConsumer(Properties properties) {
+    protected KafkaConsumer<String, String> createConsumer(Properties properties, ConsumerRebalanceListener consumerRebalanceListener) {
         // 获取需要订阅的topic
         String consumerSubscribeTopicsValue = (String) properties.remove(consumerSubscribeTopicsKey);
         List<String> consumerSubscribeTopics = Arrays.stream(consumerSubscribeTopicsValue.split(",")).map(String::trim).collect(Collectors.toList());
@@ -84,7 +83,11 @@ public class BaseKafkaTest {
 
         // 订阅topic
         if (!consumerSubscribeTopics.isEmpty()) {
-            kafkaConsumer.subscribe(consumerSubscribeTopics);
+            if (consumerRebalanceListener != null) {
+                kafkaConsumer.subscribe(consumerSubscribeTopics, consumerRebalanceListener);
+            } else {
+                kafkaConsumer.subscribe(consumerSubscribeTopics);
+            }
         }
 
         return kafkaConsumer;
