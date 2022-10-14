@@ -3,9 +3,7 @@ package io.github.amzexin.commons.test.kafka.consumer.ConcurrentConsumer;
 import io.github.amzexin.commons.test.kafka.BaseKafkaTest;
 import io.github.amzexin.commons.util.lang.SleepUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.*;
@@ -23,8 +21,7 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
 
     private ConcurrentKafkaConsumer concurrentKafkaConsumer;
 
-    @Before
-    public void before() {
+    public void startConsume(Consumer<ConsumerRecord<String, String>> recordConsumer) {
         Properties consumerProperties = getBaseConsumerProperties();
 
         // 获取需要订阅的topic
@@ -32,10 +29,18 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
         List<String> consumerSubscribeTopics = Arrays.stream(consumerSubscribeTopicsValue.split(",")).map(String::trim).collect(Collectors.toList());
 
         concurrentKafkaConsumer = new ConcurrentKafkaConsumer(consumerProperties);
-
         log.info("consumer is ok");
 
-        concurrentKafkaConsumer.subscribe(consumerSubscribeTopics, new Consumer() {
+        concurrentKafkaConsumer.subscribe(consumerSubscribeTopics, recordConsumer);
+        concurrentKafkaConsumer.pollAsync();
+    }
+
+    /**
+     * 并发消费
+     */
+    @Test
+    public void testConcurrentConsume() throws InterruptedException {
+        startConsume(new Consumer() {
             @Override
             public void accept(Object o) {
                 ConsumerRecord<String, String> record = (ConsumerRecord<String, String>) o;
@@ -51,15 +56,6 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
             }
         });
 
-        // SleepUtils.sleep(2000);
-        concurrentKafkaConsumer.pollAsync();
-    }
-
-    /**
-     * 并发消费
-     */
-    @Test
-    public void testConcurrentConsume() throws InterruptedException {
         Scanner scanner = new Scanner(System.in);
         while (true) {
             System.out.print("是否停止(y/n): ");
@@ -73,20 +69,18 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
     }
 
     /**
-     * 并发消费
+     * 并发消费在rebalance情况下的测试
      */
     @Test
     public void testConcurrentConsumeInReBalance() throws InterruptedException {
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("是否停止(y/n): ");
-            String str = scanner.nextLine();
-            if ("y".equalsIgnoreCase(str)) {
-                break;
-            }
-        }
-        concurrentKafkaConsumer.close();
-        log.info(">>>>>>>>>>>>>>>>>>>>>>>>over");
+        testConcurrentConsume();
+    }
+
+    /**
+     * 测试性能
+     */
+    @Test
+    public void testPerformance() {
     }
 
 

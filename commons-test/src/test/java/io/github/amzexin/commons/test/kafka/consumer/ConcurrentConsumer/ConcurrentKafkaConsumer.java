@@ -277,7 +277,17 @@ public class ConcurrentKafkaConsumer {
 
         log.info("实际订阅的Topic有: {}", needSubscribeTopics);
         synchronized (this.kafkaConsumer) {
-            this.kafkaConsumer.subscribe(needSubscribeTopics);
+            this.kafkaConsumer.subscribe(needSubscribeTopics, new ConsumerRebalanceListener() {
+                @Override
+                public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+                    log.info("onPartitionsRevoked");
+                }
+
+                @Override
+                public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+                    log.info("onPartitionsAssigned");
+                }
+            });
             log.info("订阅ok");
         }
     }
