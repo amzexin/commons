@@ -114,7 +114,7 @@ public class ConcurrentKafkaConsumer {
         }
         this.threadPoolExecutor = threadPoolExecutor;
         this.state = new AtomicInteger(NEW);
-        this.shutdownTimeout = Duration.ofSeconds(INFLIGHT_WINDOW_SIZE);
+        this.shutdownTimeout = Duration.ofSeconds(INFLIGHT_WINDOW_SIZE * 2L);
         this.name = UUID.randomUUID().toString().replaceAll("-", "").substring(16);
     }
 
