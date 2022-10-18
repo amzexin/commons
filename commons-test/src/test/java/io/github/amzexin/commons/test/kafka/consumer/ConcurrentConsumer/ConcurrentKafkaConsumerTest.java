@@ -2,11 +2,14 @@ package io.github.amzexin.commons.test.kafka.consumer.ConcurrentConsumer;
 
 import io.github.amzexin.commons.test.kafka.BaseKafkaTest;
 import io.github.amzexin.commons.util.lang.SleepUtils;
+import io.github.amzexin.commons.util.lang.TimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.Test;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -47,8 +50,8 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
                 String topic = record.topic();
                 int partition = record.partition();
                 long offset = record.offset();
-                // int millis = (new Random().nextInt(3) + 2) * 1000;
-                int millis = new Random().nextInt(2000);
+                int millis = (new Random().nextInt(3) + 2) * 1000;
+                // int millis = new Random().nextInt(2000);
                 log.info("[{}, {}, {}] >>>>start sleep {}ms, value = {}, ", topic, partition, offset, millis, record.value());
                 // 模拟消息处理
                 SleepUtils.sleep(millis);
@@ -81,6 +84,29 @@ public class ConcurrentKafkaConsumerTest extends BaseKafkaTest {
      */
     @Test
     public void testPerformance() {
+        AtomicInteger recordCount = new AtomicInteger(0);
+        AtomicLong startTime = new AtomicLong(0);
+
+        startConsume(new Consumer() {
+            @Override
+            public void accept(Object o) {
+                int millis = 200;
+                SleepUtils.sleep(millis);
+                if (recordCount.getAndIncrement() == 0) {
+                    startTime.set(System.currentTimeMillis());
+                }
+            }
+        });
+
+        int lastPrintCount = 0;
+        int curPrintCount = 0;
+        while (true) {
+            SleepUtils.sleep(100);
+            if ((curPrintCount = recordCount.get()) != 0 && lastPrintCount != curPrintCount) {
+                log.info("当前消费{}条, 耗时{}", recordCount.get(), TimeUtils.millisHumanize(System.currentTimeMillis() - startTime.get()));
+                lastPrintCount = curPrintCount;
+            }
+        }
     }
 
 

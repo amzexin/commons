@@ -40,9 +40,14 @@ public class ConcurrentKafkaConsumer {
     private final Set<String> consumedRecordIds = new ConcurrentSkipListSet<>();
     /**
      * 异步周期执行的线程池
-     * 用于定期将已完成的record从consumedRecordIds移除
+     * 用处1: 定期将已完成的record从consumedRecordIds移除
+     * 用处2: 定时提交offset
      */
     private final ScheduledExecutorService scheduledThreadPoolExecutor = Executors.newSingleThreadScheduledExecutor();
+    /**
+     * 定时提交offset的future
+     */
+    private ScheduledFuture<?> asyncCommitOffsetFuture;
     /**
      * 控制并发消费的信号量
      */
@@ -77,14 +82,15 @@ public class ConcurrentKafkaConsumer {
     private final KafkaConsumer<String, String> kafkaConsumer;
     /**
      * 当前状态。正常的状态变化有如下两种:
-     * 1. NEW -> STARTED -> CLOSING -> CLOSED
+     * 1. NEW -> STARTING -> STARTED -> CLOSING -> CLOSED
      * 2. NEW -> CLOSING -> CLOSED
      */
     private final AtomicInteger state;
     private static final byte NEW = 0;
-    private static final byte STARTED = 1;
-    private static final byte CLOSING = 2;
-    private static final byte CLOSED = 3;
+    private static final byte STARTING = 1;
+    private static final byte STARTED = 2;
+    private static final byte CLOSING = 3;
+    private static final byte CLOSED = 4;
     /**
      * shutdown时最大的等待时间
      */
@@ -127,11 +133,15 @@ public class ConcurrentKafkaConsumer {
         return state.get() == NEW;
     }
 
+    public boolean isStarting() {
+        return state.get() == STARTING;
+    }
+
     public boolean isStarted() {
         return state.get() == STARTED;
     }
 
-    public boolean isStopping() {
+    public boolean isClosing() {
         return state.get() == CLOSING;
     }
 
@@ -159,13 +169,13 @@ public class ConcurrentKafkaConsumer {
      */
     private void consumeAsync(ConsumerRecord<String, String> record) throws InterruptedException {
         do {
-            if (!isStarted()) {
-                throw new CkcNotStartedException(wrapName + "已不在运行状态, 不允许继续消费");
+            if (!isStarting() && !isStarted()) {
+                throw new CkcNotStartedException(wrapName + "既不是Starting也不是Started状态, 不允许继续消费");
             }
             // 检查是否被唤醒
             maybeTriggerWakeup();
             // 争抢信号量
-        } while (!concurrentConsumeSemaphore.tryAcquire(1, TimeUnit.SECONDS));
+        } while (!concurrentConsumeSemaphore.tryAcquire(10, TimeUnit.MILLISECONDS));
 
         threadPoolExecutor.execute(new Runnable() {
             @Override
@@ -257,7 +267,7 @@ public class ConcurrentKafkaConsumer {
         if (recordConsumer == null) {
             throw new RuntimeException("recordConsumer不允许为空");
         }
-        if (isStopping()) {
+        if (isClosing()) {
             throw new RuntimeException(wrapName + "正在停止中, 不允许订阅topic");
         }
         if (isClosed()) {
@@ -296,22 +306,26 @@ public class ConcurrentKafkaConsumer {
      * 异步poll并消费消息
      */
     public void pollAsync() {
-        if (isStarted()) {
+        if (isStarting()) {
             throw new RuntimeException(wrapName + "已在运行中, 不允许重复开启消费");
         }
-        if (isStopping()) {
+        if (isStarted()) {
+            throw new RuntimeException(wrapName + "已是运行状态, 不允许重复开启消费");
+        }
+        if (isClosing()) {
             throw new RuntimeException(wrapName + "正在停止中, 不允许开启消费");
         }
         if (isClosed()) {
             throw new RuntimeException(wrapName + "已停止, 不允许开启消费");
         }
-        if (!state.compareAndSet(NEW, STARTED)) {
+        if (!state.compareAndSet(NEW, STARTING)) {
             throw new RuntimeException(wrapName + "当前状态[" + state.get() + "]无法开启消费");
         }
+
         new Thread(new Runnable() {
             @Override
             public void run() {
-                while (isStarted()) {
+                while (isStarting() || isStarted()) {
                     try {
                         TraceIdUtils.setupTraceId();
 
@@ -329,11 +343,6 @@ public class ConcurrentKafkaConsumer {
                         for (ConsumerRecord<String, String> record : records) {
                             consumeAsync(record);
                         }
-
-                        // 待提交的记录数达到一个窗口的大小之后, 触发一次提交
-                        if (preCommitRecordCount.get() >= INFLIGHT_WINDOW_SIZE) {
-                            commitSync();
-                        }
                     } catch (WakeupException | CkcWakeupException e) {
                         log.warn("{}主线程触发{}", wrapName, e.getClass().getName());
                     } catch (CkcNotStartedException e) {
@@ -345,6 +354,20 @@ public class ConcurrentKafkaConsumer {
                 log.warn("{}不再poll消息, 请知悉", wrapName);
             }
         }, wrapName).start();
+
+        this.asyncCommitOffsetFuture = scheduledThreadPoolExecutor.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    // 每秒提交一次
+                    commitSync();
+                } catch (Exception e) {
+                    log.error("{}offset commit 出现异常:{}", wrapName, e.getMessage(), e);
+                }
+            }
+        }, 2, 1, TimeUnit.SECONDS);
+
+        state.compareAndSet(STARTING, STARTED);
     }
 
     /**
@@ -354,7 +377,7 @@ public class ConcurrentKafkaConsumer {
         if (isClosed()) {
             return;
         }
-        if (isStopping()) {
+        if (isClosing()) {
             throw new RuntimeException(wrapName + "正在关闭中, 不允许重复关闭");
         }
         if (!state.compareAndSet(STARTED, CLOSING) && !state.compareAndSet(NEW, CLOSING)) {
@@ -364,6 +387,10 @@ public class ConcurrentKafkaConsumer {
         log.info("{}开始关闭", wrapName);
         kafkaConsumer.wakeup();
         wakeup();
+
+        // 关闭异步提交线程
+        asyncCommitOffsetFuture.cancel(true);
+
         // 关闭之前, 先将任务执行完。shutdownTimeout即为超时时间。关闭期间每隔1s打印一下线程池运行情况
         long waitSeconds = shutdownTimeout.getSeconds();
         int availablePermits;
@@ -380,6 +407,7 @@ public class ConcurrentKafkaConsumer {
                     wrapName, waitSeconds, availablePermits, INFLIGHT_WINDOW_SIZE, activeCount, blockingQueue.size());
         }
 
+        // 手动同步提交
         try {
             commitSync();
         } catch (WakeupException e) {

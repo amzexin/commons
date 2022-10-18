@@ -1,5 +1,7 @@
 package io.github.amzexin.commons.util.lang;
 
+import java.time.Duration;
+
 /**
  * Description: MemoryUtil
  *
@@ -8,7 +10,13 @@ package io.github.amzexin.commons.util.lang;
  */
 public class TimeUtils {
 
-    private static final long SECOND = 1000;
+    private static final long NANOSECOND = 1;
+
+    private static final long MICROSECOND = NANOSECOND * 1000;
+
+    private static final long MILLISECOND = MICROSECOND * 1000;
+
+    private static final long SECOND = MILLISECOND * 1000;
 
     private static final long MINUTE = SECOND * 60;
 
@@ -17,30 +25,46 @@ public class TimeUtils {
     private static final long DAY = HOUR * 24;
 
     /**
-     * 时间可读化
+     * 毫秒人性化
      *
      * @return
      */
-    public static String timeHumanize(long millis) {
-        if (millis <= 0) {
+    public static String millisHumanize(long millis) {
+        return nanosHumanize(Duration.ofMillis(millis).toNanos());
+    }
+
+    /**
+     * 纳秒人性化
+     *
+     * @return
+     */
+    public static String nanosHumanize(long nanos) {
+        if (nanos <= 0) {
             return "";
         }
-        if (millis >= DAY) {
-            return millis / DAY + "d" + timeHumanize(millis % DAY);
+        if (nanos >= DAY) {
+            return nanos / DAY + "d " + nanosHumanize(nanos % DAY);
         }
-        if (millis >= HOUR) {
-            return millis / HOUR + "h" + timeHumanize(millis % HOUR);
+        if (nanos >= HOUR) {
+            return nanos / HOUR + "h " + nanosHumanize(nanos % HOUR);
         }
-        if (millis >= MINUTE) {
-            return millis / MINUTE + "m " + timeHumanize(millis % MINUTE);
+        if (nanos >= MINUTE) {
+            return nanos / MINUTE + "m " + nanosHumanize(nanos % MINUTE);
         }
-        if (millis >= SECOND) {
-            return millis / SECOND + "s " + timeHumanize(millis % SECOND);
+        if (nanos >= SECOND) {
+            return nanos / SECOND + "s " + nanosHumanize(nanos % SECOND);
         }
-        return millis + "ms";
+        if (nanos >= MILLISECOND) {
+            return nanos / MILLISECOND + "ms " + nanosHumanize(nanos % MILLISECOND);
+        }
+        if (nanos >= MICROSECOND) {
+            return nanos / MICROSECOND + "μs " + nanosHumanize(nanos % MICROSECOND);
+        }
+        return nanos + "ns";
     }
 
     public static void main(String[] args) {
-        System.out.println(timeHumanize(60000));
+
+        System.out.println(millisHumanize(Duration.ofMillis(100000000L).toMillis()));
     }
 }
