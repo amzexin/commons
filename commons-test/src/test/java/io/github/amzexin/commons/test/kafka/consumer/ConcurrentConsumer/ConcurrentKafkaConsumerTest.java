@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
- * Description: ConcurrentConsumeTest
+ * Description: ConcurrentKafkaConsumerTest
  *
  * @author Lizexin
  * @date 2022-09-28 14:54
