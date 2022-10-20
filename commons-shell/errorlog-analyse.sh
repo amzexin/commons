@@ -47,3 +47,14 @@ cat $2/$someday/error-*.log | grep 'ERROR' | awk '{printf("%s %s %s",$4,$5,$6); 
 
 # 为了避免误删不做自动删除
 echo "error已分析完毕, 分析结果详见$2/analyze.txt和$2/analyze_simple.txt, 并记得删除解压后的文件"
+
+<<comment
+《后续分析可能会用到的命令》
+1. 获取错误信息对应的文件
+命令: grep -Ri {目录名} -e "{要查询的内容}"
+-R 是用于递归子目录，可以查询当前目录下的所有子目录包含特定查找数据的目录
+-i 的含义是不区分大小写
+例如: grep -Ri 2022-10-13/ -e "o.h.e.jdbc.spi.SqlExceptionHelper" | awk '{print $1,$2}' | sort | uniq -c | sort -k 2,3 > SqlExceptionHelper.txt
+
+
+comment
