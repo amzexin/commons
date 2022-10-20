@@ -1,5 +1,5 @@
 #!/bin/bash
-# 进入arg3目录, 将arg1日期之后一星期的日志, 解压到arg3/arg2目录下
+# 进入arg4目录, 将arg1日期7天后的日志解压到arg3/arg2目录下, 并统计error发生的位置和次数
 arg1="arg1: 开始日期"
 arg2="arg2: 临时文件夹名称"
 arg3="arg3: 是否需要解压(y/n)"
