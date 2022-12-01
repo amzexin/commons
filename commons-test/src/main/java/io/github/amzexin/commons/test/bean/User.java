@@ -2,6 +2,8 @@ package io.github.amzexin.commons.test.bean;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * User
  *
@@ -12,6 +14,7 @@ public class User {
     private String name;
     private Integer age;
     private Address address;
+    private List<Integer> list;
 
     public User() {
     }

@@ -6,6 +6,7 @@ import ognl.Ognl;
 import ognl.OgnlException;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,6 +25,8 @@ public class OgnlTest {
     @Test
     public void test1() throws OgnlException {
         User user = new User("test", null);
+        user.setList(Collections.singletonList(1));
+        user.setList(Collections.emptyList());
         Address address = new Address("330108", "杭州市滨江区");
         user.setAddress(address);
         System.out.println(Ognl.getValue("name", user));    // test
@@ -31,6 +34,7 @@ public class OgnlTest {
         System.out.println(Ognl.getValue("name.length", user));        // 4
         System.out.println(Ognl.getValue("address", user));        // Address(port=330108, address=杭州市滨江区)
         System.out.println(Ognl.getValue("address.port", user));    // 110003
+        System.out.println(Ognl.getValue("list != null and list.size>0", user));    // 110003
     }
 
     /**
