@@ -1,0 +1,1 @@
+add_executable(string-endchar string-endchar.c)
