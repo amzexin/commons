@@ -5,16 +5,16 @@
 /**/.idea
 /**/*.iml
 /**/out
-gen
+/**/.mvn
 
 ### Java template
 # Compiled class file
-*.class
+**/*.class
 /**/target/
 **/MANIFEST.MF
 
 # Log file
-*.log
+**/*.log
 /**/logs/
 
 # BlueJ files
