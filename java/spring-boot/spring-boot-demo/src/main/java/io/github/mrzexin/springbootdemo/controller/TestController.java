@@ -1,4 +1,4 @@
-package io.github.lizexin.springbootdemo.controller;
+package io.github.mrzexin.springbootdemo.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

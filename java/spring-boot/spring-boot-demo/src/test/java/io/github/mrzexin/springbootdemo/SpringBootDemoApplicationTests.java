@@ -1,4 +1,4 @@
-package io.github.lizexin.springbootdemo;
+package io.github.mrzexin.springbootdemo;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

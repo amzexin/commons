@@ -8,7 +8,7 @@
         <version>2.7.7</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>io.github.li-zexin</groupId>
+    <groupId>io.github.mr-zexin</groupId>
     <artifactId>spring-boot-demo</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>spring-boot-demo</name>
