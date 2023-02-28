@@ -30,4 +30,15 @@ public class HBaseDDLTest {
         hBaseDDL.createNamespace("test");
     }
 
+    @Test
+    public void testListTable() throws IOException {
+        System.out.println(hBaseDDL.listTable());
+    }
+
+    @Test
+    public void testIsTableExists() throws IOException {
+        System.out.println(hBaseDDL.isTableExists("bigdata", "student"));
+        System.out.println(hBaseDDL.isTableExists("bigdata", "person"));
+    }
+
 }
