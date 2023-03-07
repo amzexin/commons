@@ -2,9 +2,6 @@ package org.example;
 
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.io.file.PathUtil;
-import cn.hutool.core.util.RuntimeUtil;
-import cn.hutool.core.util.URLUtil;
 import cn.hutool.core.util.ZipUtil;
 
 import java.io.*;
@@ -15,7 +12,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class App {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
         String script = "/Users/lizexin/projects/cloud-iot/iot-ota/iot-ota-console-api/src/main/resources/diff/adiff_3.5_lnx";
         String oldOriginZip = "/Users/lizexin/temp/diff-autogeneration/EC200NCNGBR03A06M16_OCPU_427.zip";
         String newOriginZip = "/Users/lizexin/temp/diff-autogeneration/EC200NCNGBR03A06M16_OCPU_428.zip";
