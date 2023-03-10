@@ -1,8 +1,11 @@
 package org.example;
 
+import cn.hutool.core.thread.ThreadUtil;
+import cn.hutool.core.util.RuntimeUtil;
 import cn.hutool.crypto.digest.MD5;
 
 import java.io.File;
+import java.io.IOException;
 
 /**
  * CompareMD5
@@ -12,7 +15,11 @@ import java.io.File;
  */
 public class CompareMD5 {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        rename();
+    }
+
+    private static void compareMD5() {
         String oldFile = "/Users/lizexin/Downloads/Mmax_ECU_DIFF_427_V4.2.8.bin";
         String newFile = "/Users/lizexin/Downloads/427-428-1.bin";
         MD5 md5 = MD5.create();
@@ -21,5 +28,8 @@ public class CompareMD5 {
         System.out.println("oldFileMd5: " + oldFileMd5);
         System.out.println("newFileMd5: " + newFileMd5);
         System.out.println("是否一致: " + oldFileMd5.equals(newFileMd5));
+    }
+
+    private static void rename() throws IOException {
     }
 }
