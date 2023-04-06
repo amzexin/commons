@@ -38,7 +38,7 @@ public class ResolveUtilTest {
 
     @Test
     public void testResolveInt() {
-        byte[] bytes = {0, 0, 0, -127};
+        byte[] bytes = {-1};
         System.out.println(ResolveUtil.resolveInt(bytes));
     }
 

@@ -28,7 +28,7 @@ public class BitUtilTest {
 
     @Test
     public void test20230329_1547() {
-        String str = "10001010";
+        String str = "11111111";
         print(str);
 
         byte b = -118;
@@ -36,9 +36,16 @@ public class BitUtilTest {
         print((byte) (b >> 1));         // 11000101
         print((byte) (b >>> (byte) 1)); // 11000101
 
-        int i = -118;
+        int i = -99999;
         print(i);      // 11111111111111111111111110001010
         print(i >> 1); // 11111111111111111111111111000101
         print(i >>> 1);// 01111111111111111111111111000101
+    }
+
+    @Test
+    public void test20230329_1752(){
+        String str = "11111111";
+        byte b = BitUtil.binaryStringToByte(str);
+        System.out.println(BitUtil.toHexString(b));
     }
 }

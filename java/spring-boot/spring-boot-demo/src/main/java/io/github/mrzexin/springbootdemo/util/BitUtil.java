@@ -1,5 +1,7 @@
 package io.github.mrzexin.springbootdemo.util;
 
+import org.apache.commons.codec.binary.Hex;
+
 /**
  * BitUtil
  *
@@ -50,5 +52,15 @@ public class BitUtil {
      */
     public static String toBinaryString(int i) {
         return Integer.toBinaryString(i);
+    }
+
+    /**
+     * byte to 十六进制
+     *
+     * @param b
+     * @return
+     */
+    public static String toHexString(byte b) {
+        return Hex.encodeHexString(new byte[]{b}, false);
     }
 }

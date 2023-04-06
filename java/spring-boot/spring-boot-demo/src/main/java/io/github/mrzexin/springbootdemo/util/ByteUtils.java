@@ -57,14 +57,22 @@ public class ByteUtils {
      * @return 转换之后的int
      */
     public static int byteArrToInt(byte[] bytes) {
-        if (bytes.length > 4) {
-            // java中1左移超过32位时，会先对位移次数取模，结果将不会符合预期，直接抛出
-            // 可参考：https://blog.csdn.net/keep12moving/article/details/103109092
-            throw new RuntimeException("bytes.length > 4");
-        }
+        int FF = 0xff;
+        // 假设字节数组 05 0A 07 04
+        /*
+         * int h1 = (bytes[0] & FF) << 24;//左移24位之后，h1为05 00 00 00 int h2 = (bytes[1] &
+         * FF) << 16;//左移16位之后，h2为00 0A 00 00 int h3 = (bytes[2] & FF) <<
+         * 8;//左移8位之后，h3为00 00 07 00 int h4 = bytes[3] & FF;//h4为00 00 00 04 int result
+         * = h1 | h2 | h3 | h4; return result;
+         */
         int result = 0;
-        for (int i = 0; i < bytes.length; i++) {
-            result |= bytes[i] << (bytes.length - i - 1) * 8;
+        int length = bytes.length;
+        for (int i = 0; i < length; i++) {
+            int bit = (length - i - 1) * 8;
+            int b = bytes[i] & FF;
+            int h = b << bit;
+            // System.out.println(b+"----"+h);
+            result = result | h;
         }
         return result;
     }
