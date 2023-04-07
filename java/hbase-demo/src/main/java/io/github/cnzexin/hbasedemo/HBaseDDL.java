@@ -4,11 +4,13 @@ import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Admin;
 import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.TableDescriptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -33,23 +35,59 @@ public class HBaseDDL {
         }
     }
 
-    public static List<String> listNamespace() throws IOException {
+    public static List<String> listNamespaceName() throws IOException {
         try (Admin admin = connection.getAdmin()) {
             NamespaceDescriptor[] namespaceDescriptors = admin.listNamespaceDescriptors();
             return Arrays.stream(namespaceDescriptors).map(NamespaceDescriptor::getName).collect(Collectors.toList());
         }
     }
 
-    public static List<String> listTable() throws IOException {
+    public static List<SimpleTableName> listTableName() throws IOException {
         try (Admin admin = connection.getAdmin()) {
-            return admin.listTableDescriptors().stream().map(x -> x.getTableName().getNameWithNamespaceInclAsString()).collect(Collectors.toList());
+            return Arrays.stream(admin.listTableNames()).map(x -> new SimpleTableName(x.getNamespaceAsString(), x.getQualifierAsString())).collect(Collectors.toList());
         }
     }
 
-    public static boolean isTableExists(String namespace, String tableName) throws IOException {
+    public static TableDescriptor tableDescriptor(String namespace, String tableName) throws IOException {
         try (Admin admin = connection.getAdmin()) {
-            return admin.tableExists(TableName.valueOf(namespace, tableName));
+            List<TableDescriptor> tableDescriptors = admin.listTableDescriptors(Collections.singletonList(tableNameObj(namespace, tableName)));
+            if (tableDescriptors.isEmpty()) {
+                return null;
+            }
+            return tableDescriptors.get(0);
         }
+    }
+
+    public static TableDescriptor tableDescriptor(String tableName) throws IOException {
+        return tableDescriptor(null, tableName);
+    }
+
+    public static TableDescriptor tableDescriptor(SimpleTableName simpleTableName) throws IOException {
+        return tableDescriptor(simpleTableName.getNamespace(), simpleTableName.getQualifier());
+    }
+
+    public static boolean tableExists(String namespace, String tableName) throws IOException {
+        try (Admin admin = connection.getAdmin()) {
+            return admin.tableExists(tableNameObj(namespace, tableName));
+        }
+    }
+
+    public static boolean tableExists(String tableName) throws IOException {
+        return tableExists(null, tableName);
+    }
+
+    public static boolean tableExists(SimpleTableName simpleTableName) throws IOException {
+        return tableExists(simpleTableName.getNamespace(), simpleTableName.getQualifier());
+    }
+
+    private static TableName tableNameObj(String namespace, String tableName) {
+        TableName result;
+        if (namespace == null) {
+            result = TableName.valueOf(tableName);
+        } else {
+            result = TableName.valueOf(namespace, tableName);
+        }
+        return result;
     }
 
 }

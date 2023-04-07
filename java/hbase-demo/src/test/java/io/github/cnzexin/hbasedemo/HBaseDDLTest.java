@@ -1,5 +1,6 @@
 package io.github.cnzexin.hbasedemo;
 
+import com.alibaba.fastjson.JSON;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,30 +16,35 @@ import java.util.List;
  */
 public class HBaseDDLTest {
 
-    private static Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
+    private static final Logger logger = LoggerFactory.getLogger(HBaseConnection.class);
 
-    private HBaseDDL hBaseDDL = new HBaseDDL();
+    private SimpleTableName currentTable = new SimpleTableName("test", "test");
 
     @Test
     public void testListNamespace() throws IOException {
-        List<String> namespaces = hBaseDDL.listNamespace();
+        List<String> namespaces = HBaseDDL.listNamespaceName();
         logger.info("namespaces = {}", namespaces);
     }
 
     @Test
     public void testCreateNamespace() throws IOException {
-        hBaseDDL.createNamespace("test");
+        HBaseDDL.createNamespace("test");
     }
 
     @Test
-    public void testListTable() throws IOException {
-        System.out.println(hBaseDDL.listTable());
+    public void testListTableName() throws IOException {
+        logger.info("{}", JSON.toJSONString(HBaseDDL.listTableName()));
+    }
+
+    @Test
+    public void testTableDescriptor() throws IOException {
+        logger.info("{}", JSON.toJSONString(HBaseDDL.tableDescriptor(currentTable)));
     }
 
     @Test
     public void testIsTableExists() throws IOException {
-        System.out.println(hBaseDDL.isTableExists("bigdata", "student"));
-        System.out.println(hBaseDDL.isTableExists("bigdata", "person"));
+        System.out.println(HBaseDDL.tableExists("bigdata", "student"));
+        System.out.println(HBaseDDL.tableExists("bigdata", "person"));
     }
 
 }
