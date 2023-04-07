@@ -14,4 +14,13 @@
         <name>zookeeper.znode.parent</name>
         <value>/hbase-unsecure</value>
     </property>
+    <!--自定义参数-->
+    <property>
+        <name>test.namespace</name>
+        <value>your_namespace</value>
+    </property>
+    <property>
+        <name>test.qualifier</name>
+        <value>your qualifier</value>
+    </property>
 </configuration>
