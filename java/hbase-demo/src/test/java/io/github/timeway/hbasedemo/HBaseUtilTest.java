@@ -1,4 +1,4 @@
-package io.github.cnzexin.hbasedemo;
+package io.github.timeway.hbasedemo;
 
 import com.alibaba.fastjson.JSON;
 import org.apache.hadoop.conf.Configuration;

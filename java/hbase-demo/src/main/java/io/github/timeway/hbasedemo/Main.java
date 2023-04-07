@@ -1,4 +1,4 @@
-package io.github.cnzexin.hbasedemo;
+package io.github.timeway.hbasedemo;
 
 /**
  * Main
