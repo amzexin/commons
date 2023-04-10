@@ -25,7 +25,7 @@ public class HBaseConfiguration {
      */
     private String zookeeper_znode_parent;
 
-    public Configuration getConfiguration() {
+    public Configuration toOrigin() {
         Configuration conf = new Configuration();
         if (zookeeper_quorum != null) {
             conf.set(HConstants.ZOOKEEPER_QUORUM, zookeeper_quorum);

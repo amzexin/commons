@@ -1,6 +1,7 @@
 package io.github.timeway.hbasedemo;
 
 import lombok.Data;
+import org.apache.hadoop.hbase.client.ColumnFamilyDescriptor;
 
 /**
  * SimpleColumnFamilyDescriptor
@@ -26,4 +27,11 @@ public class SimpleColumnFamilyDescriptor {
      * 历史版本数
      */
     private int historyVersionCount;
+
+    public SimpleColumnFamilyDescriptor(ColumnFamilyDescriptor columnFamilyDescriptor) {
+        this.name = columnFamilyDescriptor.getNameAsString();
+        this.timeToLive = columnFamilyDescriptor.getTimeToLive();
+        this.compressionType = columnFamilyDescriptor.getCompressionType().name();
+        this.historyVersionCount = columnFamilyDescriptor.getMaxVersions();
+    }
 }

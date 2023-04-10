@@ -2,6 +2,7 @@ package io.github.timeway.hbasedemo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import org.apache.hadoop.hbase.TableName;
 
 /**
  * SimpleTableName
@@ -14,4 +15,13 @@ import lombok.Data;
 public class SimpleTableName {
     private String namespace;
     private String qualifier;
+
+    public SimpleTableName(TableName tableName) {
+        this.namespace = tableName.getNamespaceAsString();
+        this.qualifier = tableName.getQualifierAsString();
+    }
+
+    public TableName toOrigin() {
+        return TableName.valueOf(namespace, qualifier);
+    }
 }

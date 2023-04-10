@@ -5,8 +5,10 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
+import org.apache.hadoop.hbase.util.Bytes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -21,9 +23,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HBaseUtil {
 
-    private final Connection connection;
-
     // region HBaseUtil 初始化与销毁
+
+    private final Connection connection;
 
     private static Connection createConnection(Configuration conf) {
         try {
@@ -38,7 +40,7 @@ public class HBaseUtil {
     }
 
     public HBaseUtil(HBaseConfiguration configuration) {
-        this.connection = createConnection(configuration.getConfiguration());
+        this.connection = createConnection(configuration.toOrigin());
     }
 
     public HBaseUtil(Configuration configuration) {
@@ -91,7 +93,7 @@ public class HBaseUtil {
             if (tableDescriptors.isEmpty()) {
                 return null;
             }
-            return toSimple(tableDescriptors.get(0));
+            return new SimpleTableDescriptor(tableDescriptors.get(0));
         }
     }
 
@@ -119,6 +121,48 @@ public class HBaseUtil {
 
     // endregion
 
+    // region dml
+
+    public void put(SimpleTableName tableName, String row, List<SimpleCell> cells) throws IOException {
+        try (Table table = connection.getTable(tableName.toOrigin())) {
+            Put put = new Put(Bytes.toBytes(row));
+            for (SimpleCell cell : cells) {
+                put.addColumn(Bytes.toBytes(cell.getFamily()), Bytes.toBytes(cell.getQualifier()), Bytes.toBytes(cell.getValue()));
+            }
+            table.put(put);
+        }
+    }
+
+    public SimpleResult get(SimpleTableName tableName, String row) throws IOException {
+        try (Table table = connection.getTable(tableName.toOrigin())) {
+            Get get = new Get(Bytes.toBytes(row));
+            Result result = table.get(get);
+            return new SimpleResult(result);
+        }
+    }
+
+    public List<SimpleResult> scan(SimpleTableName tableName, String startRow, String endRow) throws IOException {
+        try (Table table = connection.getTable(tableName.toOrigin())) {
+            Scan scan = new Scan().withStartRow(Bytes.toBytes(startRow)).withStopRow(Bytes.toBytes(endRow));
+            ResultScanner scanner = table.getScanner(scan);
+
+            List<SimpleResult> finalResult = new ArrayList<>();
+            for (Result result : scanner) {
+                finalResult.add(new SimpleResult(result));
+            }
+            return finalResult;
+        }
+    }
+
+    public void delete(SimpleTableName tableName, String row) throws IOException {
+        try (Table table = connection.getTable(tableName.toOrigin())) {
+            Delete delete = new Delete(Bytes.toBytes(row));
+            table.delete(delete);
+        }
+    }
+
+    // endregion
+
     // region common method
 
     private static TableName tableNameObj(String namespace, String tableName) {
@@ -129,26 +173,6 @@ public class HBaseUtil {
             result = TableName.valueOf(namespace, tableName);
         }
         return result;
-    }
-
-    private static SimpleTableName toSimple(TableName tableName) {
-        return new SimpleTableName(tableName.getNamespaceAsString(), tableName.getQualifierAsString());
-    }
-
-    private static SimpleTableDescriptor toSimple(TableDescriptor tableDescriptor) {
-        SimpleTableDescriptor simpleTableDescriptor = new SimpleTableDescriptor();
-        simpleTableDescriptor.setTableName(toSimple(tableDescriptor.getTableName()));
-        simpleTableDescriptor.setColumnFamilies(Arrays.stream(tableDescriptor.getColumnFamilies()).map(HBaseUtil::toSimple).collect(Collectors.toList()));
-        return simpleTableDescriptor;
-    }
-
-    private static SimpleColumnFamilyDescriptor toSimple(ColumnFamilyDescriptor columnFamilyDescriptor) {
-        SimpleColumnFamilyDescriptor simpleColumnFamilyDescriptor = new SimpleColumnFamilyDescriptor();
-        simpleColumnFamilyDescriptor.setName(columnFamilyDescriptor.getNameAsString());
-        simpleColumnFamilyDescriptor.setCompressionType(columnFamilyDescriptor.getCompressionType().name());
-        simpleColumnFamilyDescriptor.setHistoryVersionCount(columnFamilyDescriptor.getMaxVersions());
-        simpleColumnFamilyDescriptor.setTimeToLive(columnFamilyDescriptor.getTimeToLive());
-        return simpleColumnFamilyDescriptor;
     }
 
     // endregion
