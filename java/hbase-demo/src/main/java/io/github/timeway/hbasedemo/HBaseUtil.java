@@ -7,7 +7,6 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -38,20 +37,12 @@ public class HBaseUtil {
         }
     }
 
-    public HBaseUtil(String configName) {
-        Configuration conf = new Configuration();
-        conf.addResource(configName);
-        this.connection = createConnection(conf);
+    public HBaseUtil(HBaseConfiguration configuration) {
+        this.connection = createConnection(configuration.getConfiguration());
     }
 
-    public HBaseUtil(InputStream is) {
-        Configuration conf = new Configuration();
-        conf.addResource(is);
-        this.connection = createConnection(conf);
-    }
-
-    public HBaseUtil(Configuration conf) {
-        this.connection = createConnection(conf);
+    public HBaseUtil(Configuration configuration) {
+        this.connection = createConnection(configuration);
     }
 
     @Override
