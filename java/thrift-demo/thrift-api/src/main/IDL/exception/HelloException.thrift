@@ -1,8 +1,5 @@
 namespace java iot.github.timeway.thrift.api.exception
 
-/**
-* 处理时抛出的异常信息
-**/
 exception HelloException{
     /**
      * 异常码
