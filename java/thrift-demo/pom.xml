@@ -12,6 +12,7 @@
         <module>thrift-api</module>
         <module>thrift-client</module>
         <module>thrift-server</module>
+        <module>thrift-starter</module>
     </modules>
 
     <properties>
