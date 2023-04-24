@@ -64,4 +64,10 @@ public class ResolveUtilTest {
             log.info("{}右移{}: {}", x, i, x >> i);
         }
     }
+
+    @Test
+    public void test20230413_1721() {
+        String firmwareVersion = ResolveUtil.resolveFirmwareVersion(new byte[]{0x0A, 0x04});
+        System.out.println(firmwareVersion);
+    }
 }
