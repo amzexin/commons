@@ -47,6 +47,6 @@ void f(int n) {
 }
 
 int main() {
-    f(12);
+    f(501);
     return EXIT_SUCCESS;
 }
