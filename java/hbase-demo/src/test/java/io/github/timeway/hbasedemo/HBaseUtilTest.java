@@ -24,7 +24,7 @@ public class HBaseUtilTest {
 
     private Configuration testConf;
 
-    private HBaseUtil hBaseUtil;
+    protected HBaseUtil hBaseUtil;
 
     public static final String test_namespace = "test.namespace";
 
